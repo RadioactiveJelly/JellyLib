@@ -19,16 +19,11 @@ namespace JellyLib.EventExtensions.Proxy
         }
         public RavenscriptEventExtensionsProxy()
         {
-            _value = new RavenscriptEventExtensions();
+            _value = new();
         }
         
-        public ScriptEventProxy onProjectileLandOnTerrain
-        {
-            get
-            {
-                return ScriptEventProxy.New(_value.onProjectileLandOnTerrain);
-            }
-        }
+        public ScriptEventProxy onProjectileLandOnTerrain => ScriptEventProxy.New(_value.onProjectileLandOnTerrain);
+        public ScriptEventProxy onMedipackResupply => ScriptEventProxy.New(_value.onMedipackResupply);
         
         [MoonSharpHidden]
         public object GetValue()
