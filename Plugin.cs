@@ -7,9 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using JellyLib.JsonHelper.Proxy;
 using JellyLib.FileManager.Proxy;
-using JellyLib.JsonHelper.Wrapper;
+using JellyLib.EventExtensions.Proxy;
+using JellyLib.EventExtensions;
 using Lua;
 
 namespace JellyLib;
@@ -17,7 +17,7 @@ namespace JellyLib;
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin
 {
-    internal static new ManualLogSource Logger;
+    public static new ManualLogSource Logger;
     internal static string filePath = Paths.BepInExRootPath + "\\files\\";
     private static Harmony _harmonyInstance;
     
@@ -27,6 +27,7 @@ public class Plugin : BaseUnityPlugin
         static bool Prefix(Script script)
         {
             script.Globals["FileManager"] = typeof(FileManagerProxy);
+            script.Globals["ExtendedGameEvents"] = typeof(RavenscriptEventExtensionsProxy);
             return true;
         }
     }
@@ -37,6 +38,9 @@ public class Plugin : BaseUnityPlugin
         static bool Prefix()
         {
             UserData.RegisterType(typeof(FileManagerProxy), InteropAccessMode.Default, null);
+            UserData.RegisterType(typeof(RavenscriptEventExtensionsProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<RavenscriptEventExtensions>((Script s, RavenscriptEventExtensions v) => DynValue.FromObject(s, RavenscriptEventExtensionsProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(RavenscriptEventExtensions), (DynValue v) => v.ToObject<RavenscriptEventExtensionsProxy>()._value);
             return true;
         }
     }
@@ -49,7 +53,17 @@ public class Plugin : BaseUnityPlugin
             List<Type> proxyTypesList = new List<Type>(__result);
 
             proxyTypesList.Add(typeof(FileManagerProxy));
+            proxyTypesList.Add(typeof(RavenscriptEventExtensionsProxy));
             __result = proxyTypesList.ToArray();
+        }
+    }
+    
+    [HarmonyPatch(typeof(RavenscriptManager), "Awake")]
+    public class PatchRavenscriptManager
+    {
+        static void Postfix(RavenscriptManager __instance)
+        {
+            __instance.gameObject.AddComponent<EventsManagerPatch>();
         }
     }
     
@@ -63,14 +77,4 @@ public class Plugin : BaseUnityPlugin
         
         _harmonyInstance = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "JellyLib.Patches");
     }
-
-    /*private void Start()
-    {
-
-        var data = FileManagerProxy.ReadAllText("testData.txt");
-        
-        //var json = @"[{weaponID:[COD] M4A1,weaponDisplayName:M4A1,cost: 1000}]";
-        var prettyString = WJsonHelper.FormatJson(data);
-        Logger.LogInfo(prettyString);
-    }*/
 }
