@@ -373,8 +373,17 @@ namespace JellyLib.DamageSystem
     {
         static bool Prefix(Actor __instance, ref DamageInfo info)
         {
-            if (__instance.isInvulnerable)
+            if (__instance.isInvulnerable || __instance.dead)
                 return true;
+            
+            bool isSeated = __instance.IsSeated();
+            bool inEnclosedSeat = isSeated && __instance.seat.enclosed;
+            bool enclosedDamagedByDirectFire = isSeated && __instance.seat.enclosedDamagedByDirectFire;
+            if (!info.isPiercing && inEnclosedSeat && (!enclosedDamagedByDirectFire || info.isSplashDamage))
+            {
+                return true;
+            }
+            
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onBeforeActorDamageCalculation?.Invoke(__instance, info);
             DamageSystem.Instance.CalculateDamage(__instance, ref info);
@@ -383,8 +392,16 @@ namespace JellyLib.DamageSystem
 
         static void Postfix(Actor __instance, ref DamageInfo info)
         {
-            if (__instance.isInvulnerable)
+            if (__instance.isInvulnerable || __instance.dead)
                 return;
+            
+            bool isSeated = __instance.IsSeated();
+            bool inEnclosedSeat = isSeated && __instance.seat.enclosed;
+            bool enclosedDamagedByDirectFire = isSeated && __instance.seat.enclosedDamagedByDirectFire;
+            if (!info.isPiercing && inEnclosedSeat && (!enclosedDamagedByDirectFire || info.isSplashDamage))
+            {
+                return;
+            }
             
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
