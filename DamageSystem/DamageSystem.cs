@@ -373,6 +373,8 @@ namespace JellyLib.DamageSystem
     {
         static bool Prefix(Actor __instance, ref DamageInfo info)
         {
+            if (__instance.isInvulnerable)
+                return true;
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onBeforeActorDamageCalculation?.Invoke(__instance, info);
             DamageSystem.Instance.CalculateDamage(__instance, ref info);
@@ -381,6 +383,9 @@ namespace JellyLib.DamageSystem
 
         static void Postfix(Actor __instance, ref DamageInfo info)
         {
+            if (__instance.isInvulnerable)
+                return;
+            
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
         }
