@@ -24,8 +24,6 @@ namespace JellyLib.EventExtensions.Proxy
         
         public ScriptEventProxy onProjectileLandOnTerrain => ScriptEventProxy.New(_value.onProjectileLandOnTerrain);
         public ScriptEventProxy onMedipackResupply => ScriptEventProxy.New(_value.onMedipackResupply);
-        public ScriptEventProxy onBeforeActorDamageCalculation => ScriptEventProxy.New(_value.onBeforeActorDamageCalculation);
-        public ScriptEventProxy onAfterActorDamageCalculation => ScriptEventProxy.New(_value.onAfterActorDamageCalculation);
         
         [MoonSharpHidden]
         public object GetValue()

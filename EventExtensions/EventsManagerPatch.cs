@@ -69,7 +69,6 @@ namespace JellyLib.EventExtensions
     [HarmonyPatch(typeof(ScriptEventCache), "GetOrCreateEvent")]
     public class PatchGetOrCreateEvent
     {
-
         static bool Prefix(ScriptEventCache __instance,UnityEventBase unityEvent, ref ScriptEventCache.GetOrCreateResult __result, Dictionary<UnityEventBase, ScriptEvent> ___events)
         {
             if (!___events.ContainsKey(unityEvent))
@@ -85,7 +84,6 @@ namespace JellyLib.EventExtensions
     [HarmonyPatch(typeof(ScriptEventCache), "GetOrCreateAction")]
     public class OatchGetOrCreateAction
     {
-
         static bool Prefix(ScriptEventCache __instance, Action action, ref ScriptEventCache.GetOrCreateResult __result, Dictionary<Action, ScriptEvent> ___actions)
         {
             if (!___actions.ContainsKey(action))

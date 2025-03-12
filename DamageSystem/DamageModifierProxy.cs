@@ -33,10 +33,10 @@ namespace JellyLib.DamageSystem
             _value = source._value;
         }
 
-        public DamageModifierProxy(float healthDamageMultiplier, float balanceDamageMultiplier,
+        public DamageModifierProxy(DamageCalculationPhase damageCalculationPhase, float healthDamageMultiplier, float balanceDamageMultiplier,
             float flatHealthDamageMultiplier, float flatBalanceDamageModifier)
         {
-            _value = new DamageModifier(healthDamageMultiplier, balanceDamageMultiplier, flatHealthDamageMultiplier, flatBalanceDamageModifier);
+            _value = new DamageModifier(damageCalculationPhase, healthDamageMultiplier, balanceDamageMultiplier, flatHealthDamageMultiplier, flatBalanceDamageModifier);
         }
 
         public float HealthDamageMultiplier
@@ -63,26 +63,31 @@ namespace JellyLib.DamageSystem
             set => _value.FlatBalanceDamageModifier = value;
         }
 
+        public DamageCalculationPhase DamageCalculationPhase
+        {
+            get => _value.DamageCalculationPhase;
+            set => _value.DamageCalculationPhase = value;
+        }
+
+        [MoonSharpHidden]
         public static DamageModifierProxy New(DamageModifier modifier)
         {
             return new DamageModifierProxy(modifier);
         }
         
         [MoonSharpUserDataMetamethod("__call")]
-        public static DamageModifierProxy Call(float healthDamageMultiplier, float balanceDamageMultiplier,
+        public static DamageModifierProxy Call(DynValue _,DamageCalculationPhase damageCalculationPhase,float healthDamageMultiplier, float balanceDamageMultiplier,
             float flatHealthDamageMultiplier, float flatBalanceDamageModifier)
         {
-            return new DamageModifierProxy(healthDamageMultiplier, balanceDamageMultiplier, flatHealthDamageMultiplier, flatBalanceDamageModifier);
+            return new DamageModifierProxy(damageCalculationPhase,healthDamageMultiplier, balanceDamageMultiplier, flatHealthDamageMultiplier, flatBalanceDamageModifier);
         }
-
-        // Token: 0x06003901 RID: 14593 RVA: 0x00105E6E File Offset: 0x0010406E
+        
         [MoonSharpUserDataMetamethod("__call")]
         public static DamageModifierProxy Call(DynValue _, DamageModifierProxy source)
         {
             return new DamageModifierProxy(source);
         }
-
-        // Token: 0x06003902 RID: 14594 RVA: 0x00105E76 File Offset: 0x00104076
+        
         [MoonSharpUserDataMetamethod("__call")]
         public static DamageModifierProxy Call(DynValue _)
         {

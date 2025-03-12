@@ -31,6 +31,7 @@ public class Plugin : BaseUnityPlugin
             script.Globals["ExtendedGameEvents"] = typeof(RavenscriptEventExtensionsProxy);
             script.Globals["DamageSystemExtension"] = typeof(DamageSystemProxy);
             script.Globals["DamageModifier"] = typeof(DamageModifierProxy);
+            script.Globals["DamageCalculationPhase"] = typeof(DamageCalculationPhase);
             return true;
         }
     }
@@ -45,10 +46,10 @@ public class Plugin : BaseUnityPlugin
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<RavenscriptEventExtensions>((Script s, RavenscriptEventExtensions v) => DynValue.FromObject(s, RavenscriptEventExtensionsProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(RavenscriptEventExtensions), (DynValue v) => v.ToObject<RavenscriptEventExtensionsProxy>()._value);
             UserData.RegisterType(typeof(DamageSystemProxy), InteropAccessMode.Default, null);
-            
             UserData.RegisterType(typeof(DamageModifierProxy), InteropAccessMode.Default, null);
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<DamageModifier>((Script s, DamageModifier v) => DynValue.FromObject(s, DamageModifierProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(DamageModifier), (DynValue v) => v.ToObject<DamageModifierProxy>()._value);
+            UserData.RegisterType(typeof(DamageCalculationPhase), InteropAccessMode.Default, null);
             return true;
         }
     }
@@ -63,7 +64,20 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(FileManagerProxy));
             proxyTypesList.Add(typeof(RavenscriptEventExtensionsProxy));
             proxyTypesList.Add(typeof(DamageSystemProxy));
+            proxyTypesList.Add(typeof(DamageModifierProxy));
             __result = proxyTypesList.ToArray();
+        }
+    }
+
+    [HarmonyPatch(typeof(Registrar), nameof(Registrar.GetAllowedTypes))]
+    public class PatchGetAllowedTypes
+    {
+        static void Postfix(ref Type[] __result)
+        {
+            List<Type> allowedTypesList = new List<Type>(__result);
+            
+            allowedTypesList.Add(typeof(DamageCalculationPhase));
+            __result = allowedTypesList.ToArray();
         }
     }
     
