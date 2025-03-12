@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using JellyLib.DamageSystem;
 using JellyLib.FileManager.Proxy;
 using JellyLib.EventExtensions.Proxy;
 using JellyLib.EventExtensions;
@@ -28,6 +29,8 @@ public class Plugin : BaseUnityPlugin
         {
             script.Globals["FileManager"] = typeof(FileManagerProxy);
             script.Globals["ExtendedGameEvents"] = typeof(RavenscriptEventExtensionsProxy);
+            script.Globals["DamageSystemExtension"] = typeof(DamageSystemProxy);
+            script.Globals["DamageModifier"] = typeof(DamageModifierProxy);
             return true;
         }
     }
@@ -41,6 +44,11 @@ public class Plugin : BaseUnityPlugin
             UserData.RegisterType(typeof(RavenscriptEventExtensionsProxy), InteropAccessMode.Default, null);
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<RavenscriptEventExtensions>((Script s, RavenscriptEventExtensions v) => DynValue.FromObject(s, RavenscriptEventExtensionsProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(RavenscriptEventExtensions), (DynValue v) => v.ToObject<RavenscriptEventExtensionsProxy>()._value);
+            UserData.RegisterType(typeof(DamageSystemProxy), InteropAccessMode.Default, null);
+            
+            UserData.RegisterType(typeof(DamageModifierProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<DamageModifier>((Script s, DamageModifier v) => DynValue.FromObject(s, DamageModifierProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(DamageModifier), (DynValue v) => v.ToObject<DamageModifierProxy>()._value);
             return true;
         }
     }
@@ -54,6 +62,7 @@ public class Plugin : BaseUnityPlugin
 
             proxyTypesList.Add(typeof(FileManagerProxy));
             proxyTypesList.Add(typeof(RavenscriptEventExtensionsProxy));
+            proxyTypesList.Add(typeof(DamageSystemProxy));
             __result = proxyTypesList.ToArray();
         }
     }
@@ -73,7 +82,6 @@ public class Plugin : BaseUnityPlugin
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         
         Directory.CreateDirectory(filePath);
-
         
         _harmonyInstance = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "JellyLib.Patches");
     }

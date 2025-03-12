@@ -72,7 +72,6 @@ namespace JellyLib.EventExtensions
 
         static bool Prefix(ScriptEventCache __instance,UnityEventBase unityEvent, ref ScriptEventCache.GetOrCreateResult __result, Dictionary<UnityEventBase, ScriptEvent> ___events)
         {
-
             if (!___events.ContainsKey(unityEvent))
             {
                 ScriptEvent scriptEvent = EventsManagerPatch.events.CreateEvent();
@@ -89,7 +88,6 @@ namespace JellyLib.EventExtensions
 
         static bool Prefix(ScriptEventCache __instance, Action action, ref ScriptEventCache.GetOrCreateResult __result, Dictionary<Action, ScriptEvent> ___actions)
         {
-
             if (!___actions.ContainsKey(action))
             {
                 ScriptEvent scriptEvent = EventsManagerPatch.events.CreateEvent();
