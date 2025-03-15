@@ -12,6 +12,7 @@ using JellyLib.FileManager.Proxy;
 using JellyLib.EventExtensions.Proxy;
 using JellyLib.EventExtensions;
 using Lua;
+using UnityEngine;
 
 namespace JellyLib;
 
@@ -43,13 +44,25 @@ public class Plugin : BaseUnityPlugin
         {
             UserData.RegisterType(typeof(FileManagerProxy), InteropAccessMode.Default, null);
             UserData.RegisterType(typeof(RavenscriptEventExtensionsProxy), InteropAccessMode.Default, null);
-            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<RavenscriptEventExtensions>((Script s, RavenscriptEventExtensions v) => DynValue.FromObject(s, RavenscriptEventExtensionsProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, RavenscriptEventExtensions v) => DynValue.FromObject(s, RavenscriptEventExtensionsProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(RavenscriptEventExtensions), (DynValue v) => v.ToObject<RavenscriptEventExtensionsProxy>()._value);
             UserData.RegisterType(typeof(DamageSystemProxy), InteropAccessMode.Default, null);
             UserData.RegisterType(typeof(DamageModifierProxy), InteropAccessMode.Default, null);
-            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion<DamageModifier>((Script s, DamageModifier v) => DynValue.FromObject(s, DamageModifierProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, DamageModifier v) => DynValue.FromObject(s, DamageModifierProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(DamageModifier), (DynValue v) => v.ToObject<DamageModifierProxy>()._value);
             UserData.RegisterType(typeof(DamageCalculationPhase), InteropAccessMode.Default, null);
+            
+            //Lord forgive me.
+            //The derived weapon types below don't have an associated proxy.
+            //This allows the below weapon types to use the base WeaponProxy class.
+            //REMINDER: Keep an eye on these. If any of these get proper RS support in the vanilla game this could cause errors.
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, ThrowableWeapon v) => DynValue.FromObject(s, WeaponProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, MeleeWeapon v) => DynValue.FromObject(s, WeaponProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, RavenSword v) => DynValue.FromObject(s, WeaponProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, ShellLoadedWeapon v) => DynValue.FromObject(s, WeaponProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, Airhorn v) => DynValue.FromObject(s, WeaponProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, RemoteDetonatorWeapon v) => DynValue.FromObject(s, WeaponProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, Wrench v) => DynValue.FromObject(s, WeaponProxy.New(v)));
             return true;
         }
     }

@@ -16,7 +16,7 @@
         public float FlatHealthDamageModifier = flatHealthDamageModifier;
         public float FlatBalanceDamageModifier = flatBalanceDamageModifier;
 
-        public static DamageModifier Default => new DamageModifier(DamageCalculationPhase.Early,1, 1, 0, 0);
+        public static DamageModifier Default => new (DamageCalculationPhase.Early,0, 0, 0, 0);
         
         public DamageModifier(DamageModifier source) : this(source.DamageCalculationPhase,source.HealthDamageMultiplier, source.BalanceDamageMultiplier, source.FlatHealthDamageModifier, source.FlatBalanceDamageModifier) { }
     }

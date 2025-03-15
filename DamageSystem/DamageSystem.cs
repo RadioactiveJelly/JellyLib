@@ -4,32 +4,36 @@ using Lua;
 using MoonSharp.Interpreter;
 using UnityEngine;
 using System.Linq;
+using System.Diagnostics;
 
 namespace JellyLib.DamageSystem
 {
     public class DamageSystem
     {
-        private static DamageSystem _instance;
-        public static DamageSystem Instance
-        {
-            get
-            {
-                if (_instance == null)
-                    _instance = new();
-                return _instance;
-            }
-        }
+        private readonly Dictionary<int, ActorDamageData> _actorData = new();
         
-        private Dictionary<int, ActorDamageData> actorData = new();
+        private static DamageSystem _instance;
+        public static DamageSystem Instance => _instance ??= new DamageSystem();
+        
+        
 
         public ActorDamageData GetActorData(int actorId)
         {
-            if (actorData.TryGetValue(actorId, out var data))
+            if (_actorData.TryGetValue(actorId, out var data))
             {
                 return data;
             }
             var actorDamageData = new ActorDamageData();
-            actorData.Add(actorId, actorDamageData);
+            _actorData.Add(actorId, actorDamageData);
+            return actorDamageData;
+        }
+
+        public ActorDamageData RegisterActor(Actor actor)
+        {
+            if (_actorData.TryGetValue(actor.actorIndex, out var data))
+                return null;
+            var actorDamageData = new ActorDamageData();
+            _actorData.Add(actor.actorIndex, actorDamageData);
             return actorDamageData;
         }
 
@@ -74,12 +78,14 @@ namespace JellyLib.DamageSystem
         
         public void CalculateDamage(Actor targetActor, ref DamageInfo damageInfo)
         {
+            var stopwatch = Stopwatch.StartNew();
+                
             //Early Phase
             var earlyResult = CalculateDamagePhase(targetActor, damageInfo, DamageCalculationPhase.Early);
             damageInfo.healthDamage = earlyResult.Item1;
             damageInfo.balanceDamage = earlyResult.Item2;
             
-            if(actorData.TryGetValue(targetActor.actorIndex, out var data))
+            if(_actorData.TryGetValue(targetActor.actorIndex, out var data))
                 data.onBeforeActorLateDamageCalculation?.Invoke(targetActor,damageInfo);
             
             //Late Phase
@@ -89,38 +95,46 @@ namespace JellyLib.DamageSystem
             
             damageInfo.healthDamage = Mathf.Clamp(damageInfo.healthDamage, 0, float.MaxValue);
             damageInfo.balanceDamage = Mathf.Clamp(damageInfo.balanceDamage, 0, float.MaxValue);
+            
+            stopwatch.Stop();
+            if (stopwatch.ElapsedMilliseconds > 1000) 
+                Plugin.Logger.LogWarning($"[DamageSystem.CalculateDamage] Operation took {stopwatch.ElapsedMilliseconds}ms to calculate damage. This is longer than usual.");
         }
 
         private (float, float) CalculateDamagePhase(Actor targetActor, DamageInfo damageInfo, DamageCalculationPhase phase)
         {
-            var phaseHealthDamage = 0f;
-            var phaseBalanceDamage = 0f;
-
-            if(damageInfo.sourceActor && actorData.TryGetValue(targetActor.actorIndex, out var sourceActorData))
+            var phaseHealthDamage = damageInfo.healthDamage;
+            var phaseBalanceDamage = damageInfo.balanceDamage;
+            
+            if(damageInfo.sourceActor && _actorData.TryGetValue(damageInfo.sourceActor.actorIndex, out var sourceActorData))
             {
                 if (sourceActorData.OutgoingDamageData.TryGetValue(damageInfo.type, out var damageData))
                 {
-                    var finalModifiers = CalculateModifiers(damageData.DamageModifiers.Values.Where(m => m.DamageCalculationPhase == phase));
-                    
-                    phaseHealthDamage = (damageInfo.healthDamage * finalModifiers.Item1) + finalModifiers.Item3;
-                    phaseBalanceDamage = (damageInfo.balanceDamage * finalModifiers.Item2) + finalModifiers.Item4;
+                    var finalModifiers = CalculateModifiersAdditive(damageData.DamageModifiers.Values.Where(m => m.DamageCalculationPhase == phase));
+
+                    phaseHealthDamage *= finalModifiers.Item1;
+                    phaseBalanceDamage *= finalModifiers.Item2;
+                    phaseHealthDamage += finalModifiers.Item3;
+                    phaseBalanceDamage += finalModifiers.Item4;
                 }
             }
-            if (actorData.TryGetValue(targetActor.actorIndex, out var targetActorData))
+            if (_actorData.TryGetValue(targetActor.actorIndex, out var targetActorData))
             {
                 if (targetActorData.IncomingDamageData.TryGetValue(damageInfo.type, out var damageData))
                 {
-                    var finalModifiers = CalculateModifiers(damageData.DamageModifiers.Values.Where(m => m.DamageCalculationPhase == phase));
+                    var finalModifiers = CalculateModifiersMultiplicative(damageData.DamageModifiers.Values.Where(m => m.DamageCalculationPhase == phase));
                     
-                    phaseHealthDamage = (damageInfo.healthDamage * finalModifiers.Item1) - finalModifiers.Item3;
-                    phaseBalanceDamage = (damageInfo.balanceDamage * finalModifiers.Item2) - finalModifiers.Item4;
+                    phaseHealthDamage *= finalModifiers.Item1;
+                    phaseBalanceDamage *= finalModifiers.Item2;
+                    phaseHealthDamage -= finalModifiers.Item3;
+                    phaseBalanceDamage -= finalModifiers.Item4;
                 }
             }
-
+            
             return (phaseHealthDamage, phaseBalanceDamage);
         }
         
-        private (float, float, float, float) CalculateModifiers(IEnumerable<DamageModifier> modifiers)
+        private (float, float, float, float) CalculateModifiersMultiplicative(IEnumerable<DamageModifier> modifiers)
         {
             //Health multiplier, balance multiplier, flat health modifier, flat balance modifier
             var finalModifierValue = (1f, 1f, 0f, 0f);
@@ -128,6 +142,20 @@ namespace JellyLib.DamageSystem
             {
                 finalModifierValue.Item1 *= modifier.HealthDamageMultiplier;
                 finalModifierValue.Item2 *= modifier.BalanceDamageMultiplier;
+                finalModifierValue.Item3 += modifier.FlatHealthDamageModifier;
+                finalModifierValue.Item4 += modifier.FlatBalanceDamageModifier;
+            }
+            return finalModifierValue;
+        }
+        
+        private (float, float, float, float) CalculateModifiersAdditive(IEnumerable<DamageModifier> modifiers)
+        {
+            //Health multiplier, balance multiplier, flat health modifier, flat balance modifier
+            var finalModifierValue = (1f, 1f, 0f, 0f);
+            foreach (var modifier in modifiers)
+            {
+                finalModifierValue.Item1 += modifier.HealthDamageMultiplier;
+                finalModifierValue.Item2 += modifier.BalanceDamageMultiplier;
                 finalModifierValue.Item3 += modifier.FlatHealthDamageModifier;
                 finalModifierValue.Item4 += modifier.FlatBalanceDamageModifier;
             }
@@ -145,7 +173,7 @@ namespace JellyLib.DamageSystem
         public void AddIncomingDamageModifier(Actor actor, DamageInfo.DamageSourceType damageType, string modifierName,
             DamageModifier damageModifier)
         {
-            if (actorData.TryGetValue(actor.actorIndex, out var data))
+            if (_actorData.TryGetValue(actor.actorIndex, out var data))
             {
                 data.AddIncomingDamageModifier(damageType, modifierName, damageModifier);
             }
@@ -153,7 +181,7 @@ namespace JellyLib.DamageSystem
             {
                 var newData = new ActorDamageData();
                 newData.AddIncomingDamageModifier(damageType, modifierName, damageModifier);
-                actorData.Add(actor.actorIndex, newData);
+                _actorData.Add(actor.actorIndex, newData);
             }
         }
 
@@ -168,7 +196,7 @@ namespace JellyLib.DamageSystem
         public void AddOutgoingDamageModifier(Actor actor, DamageInfo.DamageSourceType damageType, string modifierName,
             DamageModifier damageModifier)
         {
-            if (actorData.TryGetValue(actor.actorIndex, out var data))
+            if (_actorData.TryGetValue(actor.actorIndex, out var data))
             {
                 data.AddOutgoingDamageModifier(damageType, modifierName, damageModifier);
             }
@@ -176,13 +204,13 @@ namespace JellyLib.DamageSystem
             {
                 var newData = new ActorDamageData();
                 newData.AddOutgoingDamageModifier(damageType, modifierName, damageModifier);
-                actorData.Add(actor.actorIndex, newData);
+                _actorData.Add(actor.actorIndex, newData);
             }
         }
 
         public void RemoveIncomingDamageModifier(Actor actor, DamageInfo.DamageSourceType damageType, string modifierName)
         {
-            if (actorData.TryGetValue(actor.actorIndex, out var data))
+            if (_actorData.TryGetValue(actor.actorIndex, out var data))
             {
                 data.RemoveIncomingDamageModifier(damageType, modifierName);
             }
@@ -190,7 +218,7 @@ namespace JellyLib.DamageSystem
 
         public void RemoveOutgoingDamageModifier(Actor actor, DamageInfo.DamageSourceType damageType, string modifierName)
         {
-            if (actorData.TryGetValue(actor.actorIndex, out var data))
+            if (_actorData.TryGetValue(actor.actorIndex, out var data))
             {
                 data.RemoveOutgoingDamageModifier(damageType, modifierName);
             }
@@ -198,12 +226,12 @@ namespace JellyLib.DamageSystem
 
         public void Clear()
         {
-            foreach (var actorDamageData in actorData.Values)
+            foreach (var actorDamageData in _actorData.Values)
             {
                 actorDamageData.onBeforeActorDamageCalculation.RemoveInvalidListeners();
                 actorDamageData.onAfterActorDamageCalculation.RemoveInvalidListeners();
             }
-            actorData.Clear();
+            _actorData.Clear();
         }
         
         /// <summary>
@@ -215,43 +243,6 @@ namespace JellyLib.DamageSystem
             /// A dictionary that holds damage modifiers. Modifiers are multiplied together to calculate a final value.
             /// </summary>
             public Dictionary<string, DamageModifier> DamageModifiers { get; private set; } = new();
-            /// <summary>
-            /// The final health damage multiplier that will be used in damage calculation.
-            /// </summary>
-            public float CalculatedHealthDamageMultiplier { get; private set; } = 1;
-            /// <summary>
-            /// The final balance damage multiplier that will be used in damage calculation.
-            /// </summary>
-            public float CalculatedBalanceDamageMultiplier { get; private set; } = 1;
-
-            /// <summary>
-            /// The final flat health damage modifier that will be used in damage calculation.
-            /// </summary>
-            public float TotalFlatHealthDamageModifier { get; private set; } = 0;
-            
-            /// <summary>
-            /// The final flat balance damage modifier that will be used in damage calculation.
-            /// </summary>
-            public float TotalFlatBalanceDamageModifier { get; private set; } = 0;
-
-            /// <summary>
-            /// Multiplies all damage modifiers together. Used for performance purposes.
-            /// </summary>
-            public void CalculateModifiers()
-            {
-                CalculatedBalanceDamageMultiplier = 1;
-                CalculatedBalanceDamageMultiplier = 1;
-                TotalFlatHealthDamageModifier = 0;
-                TotalFlatBalanceDamageModifier = 0;
-                
-                foreach (var damageModifier in DamageModifiers.Values)
-                {
-                    CalculatedHealthDamageMultiplier *= damageModifier.HealthDamageMultiplier;
-                    CalculatedBalanceDamageMultiplier *= damageModifier.BalanceDamageMultiplier;
-                    TotalFlatHealthDamageModifier += damageModifier.FlatHealthDamageModifier;
-                    TotalFlatBalanceDamageModifier += damageModifier.FlatBalanceDamageModifier;
-                }
-            }
 
             public void ClearDamageModifiers()
             {
@@ -301,6 +292,9 @@ namespace JellyLib.DamageSystem
                 if (!IncomingDamageData.TryGetValue(damageType, out var damageData))
                     return;
                 
+                modifier.HealthDamageMultiplier = 1 - modifier.HealthDamageMultiplier;
+                modifier.BalanceDamageMultiplier = 1 - modifier.BalanceDamageMultiplier;
+                
                 AddModifier(damageData, modifierName, modifier);
             }
             
@@ -315,7 +309,6 @@ namespace JellyLib.DamageSystem
             private void AddModifier(DamageData damageData, string modifierName, DamageModifier modifier)
             {
                 damageData.DamageModifiers[modifierName] = modifier;
-                damageData.CalculateModifiers();
             }
 
             public void RemoveIncomingDamageModifier(DamageInfo.DamageSourceType damageType, string modifierName)
@@ -324,7 +317,6 @@ namespace JellyLib.DamageSystem
                     return;
                 
                 damageData.DamageModifiers.Remove(modifierName);
-                damageData.CalculateModifiers();
             }
 
             public void RemoveOutgoingDamageModifier(DamageInfo.DamageSourceType damageType, string modifierName)
@@ -333,7 +325,6 @@ namespace JellyLib.DamageSystem
                     return;
                 
                 damageData.DamageModifiers.Remove(modifierName);
-                damageData.CalculateModifiers();
             }
 
             [CallbackSignature(new string[]
@@ -414,6 +405,28 @@ namespace JellyLib.DamageSystem
         static bool Prefix(GameManager __instance)
         {
             DamageSystem.Instance.Clear();
+            return true;
+        }
+    }
+    
+    [HarmonyPatch(typeof(GameManager), nameof(GameManager.RestartLevel))]
+    public class PatchRestartLevel
+    {
+        static bool Prefix(GameManager __instance)
+        {
+            DamageSystem.Instance.Clear();
+            return true;
+        }
+    }
+    
+    [HarmonyPatch(typeof(ActorManager), nameof(ActorManager.Register))]
+    public class PatchRegisterActor
+    {
+        static bool Prefix(Actor actor)
+        {
+            Plugin.Logger.LogInfo($"[{nameof(DamageSystem)}.{nameof(ActorManager.Register)}.Prefix].Registered: {actor.name}");
+            var actorDamageData = new DamageSystem.ActorDamageData();
+            DamageSystem.Instance.RegisterActor(actor);
             return true;
         }
     }
