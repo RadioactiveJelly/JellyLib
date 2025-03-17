@@ -34,7 +34,26 @@ namespace JellyLib.WeaponUtils
         {
             return weaponProxy;
         }
-        
+
+        public static void AddWeaponOverride(WeaponEntryProxy weaponEntryProxy, WeaponOverrideProxy weaponOverrideProxy)
+        {
+            if (weaponEntryProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon entry provided!");
+            }
+            WeaponUtils.OverrideManager.AddWeaponOverride(weaponEntryProxy._value, weaponOverrideProxy._value);
+        }
+
+        public static void RemoveWeaponOverride(WeaponEntryProxy weaponEntryProxy)
+        {
+            if (weaponEntryProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon entry provided!");
+            }
+
+            WeaponUtils.OverrideManager.RemoveWeaponOverride(weaponEntryProxy._value);
+        }
+
         [MoonSharpHidden]
         public object GetValue()
         {

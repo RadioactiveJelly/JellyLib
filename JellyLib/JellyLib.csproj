@@ -31,8 +31,8 @@
     <Reference Include="Assembly-Csharp">
       <HintPath>libs\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="JsonUtility">
-      <HintPath>libs\UnityEngine.JSONSerializeModule.dll</HintPath>
+    <Reference Include="Steamworks">
+      <HintPath>libs\com.rlabrecque.steamworks.net.dll</HintPath>
     </Reference>
 </ItemGroup>
 

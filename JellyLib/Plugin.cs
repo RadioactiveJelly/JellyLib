@@ -35,6 +35,7 @@ public class Plugin : BaseUnityPlugin
             script.Globals["DamageModifier"] = typeof(DamageModifierProxy);
             script.Globals["DamageCalculationPhase"] = typeof(DamageCalculationPhase);
             script.Globals["WeaponUtils"] = typeof(WeaponUtilsProxy);
+            script.Globals["WeaponOverride"] = typeof(WeaponOverrideProxy);
             return true;
         }
     }
@@ -54,6 +55,9 @@ public class Plugin : BaseUnityPlugin
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(DamageModifier), (DynValue v) => v.ToObject<DamageModifierProxy>()._value);
             UserData.RegisterType(typeof(DamageCalculationPhase), InteropAccessMode.Default, null);
             UserData.RegisterType(typeof(WeaponUtilsProxy), InteropAccessMode.Default, null);
+            UserData.RegisterType(typeof(WeaponOverrideProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, WeaponOverride v) => DynValue.FromObject(s, WeaponOverrideProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(WeaponOverride), (DynValue v) => v.ToObject<WeaponOverrideProxy>()._value);
             return true;
         }
     }
@@ -70,6 +74,7 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(DamageSystemProxy));
             proxyTypesList.Add(typeof(DamageModifierProxy));
             proxyTypesList.Add(typeof(WeaponUtilsProxy));
+            proxyTypesList.Add(typeof(WeaponOverrideProxy));
             __result = proxyTypesList.ToArray();
         }
     }
