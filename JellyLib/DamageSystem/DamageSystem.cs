@@ -15,8 +15,6 @@ namespace JellyLib.DamageSystem
         private static DamageSystem _instance;
         public static DamageSystem Instance => _instance ??= new DamageSystem();
         
-        
-
         public ActorDamageData GetActorData(int actorId)
         {
             if (_actorData.TryGetValue(actorId, out var data))
@@ -405,6 +403,7 @@ namespace JellyLib.DamageSystem
         static bool Prefix(GameManager __instance)
         {
             DamageSystem.Instance.Clear();
+            Plugin.Logger.LogInfo($"{nameof(DamageSystem)}.{nameof(GameManager.ReturnToMenu)}.Prefix: Cleared damage data.");
             return true;
         }
     }
@@ -415,6 +414,7 @@ namespace JellyLib.DamageSystem
         static bool Prefix(GameManager __instance)
         {
             DamageSystem.Instance.Clear();
+            Plugin.Logger.LogInfo($"{nameof(DamageSystem)}.{nameof(GameManager.RestartLevel)}.Prefix: Cleared damage data.");
             return true;
         }
     }
