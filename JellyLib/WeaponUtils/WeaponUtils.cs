@@ -57,7 +57,6 @@ namespace JellyLib.WeaponUtils
 
         public bool GetWeaponOverride(WeaponManager.WeaponEntry weaponEntry, out WeaponOverride weaponOverride)
         {
-            var modId = weaponEntry.sourceMod.workshopItemId.m_PublishedFileId;
             return _weaponOverrides.TryGetValue(weaponEntry, out weaponOverride);
         }
     }
@@ -82,6 +81,21 @@ namespace JellyLib.WeaponUtils
             {
                 __result.configuration.spareAmmo = weaponOverride.maxSpareAmmo.Value;
                 __result.spareAmmo = __result.configuration.spareAmmo;
+            }
+
+            if (weaponOverride.maxAmmoPerReload.HasValue)
+            {
+                __result.configuration.maxAmmoPerReload = weaponOverride.maxAmmoPerReload.Value;
+            }
+
+            if (weaponOverride.autoAdjustAllowedReloads)
+            {
+                List<int> allowedReloads = new List<int>();
+                for (var i = 0; i < __result.configuration.ammo; i++)
+                {
+                    allowedReloads.Add(i+1);
+                }
+                __result.configuration.allowedReloads = allowedReloads.ToArray();
             }
         }
     }

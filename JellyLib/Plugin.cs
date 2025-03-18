@@ -6,6 +6,7 @@ using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using JellyLib.DamageSystem;
 using JellyLib.FileManager.Proxy;
@@ -108,5 +109,7 @@ public class Plugin : BaseUnityPlugin
         Directory.CreateDirectory(filePath);
         
         _harmonyInstance = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "JellyLib.Patches");
+
+        RavenfieldExtensions.AVAILABLE_EXTENSIONS_LOWERCASE = RavenfieldExtensions.AVAILABLE_EXTENSIONS_LOWERCASE.AddToArray("jellylib");
     }
 }
