@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Lua.Proxy;
 using Lua;
 using Steamworks;
@@ -30,6 +31,53 @@ namespace JellyLib.WeaponUtils
 
         private static WeaponOverrideManager _overrideManager; 
         public static WeaponOverrideManager OverrideManager => _overrideManager ??= new WeaponOverrideManager();
+
+        private static Dictionary<ulong, Dictionary<string, WeaponManager.WeaponEntry>> _weaponsByModId;
+
+        public static void SortWeaponEntriesByModId()
+        {
+            if (_weaponsByModId == null)
+                _weaponsByModId = new();
+            else
+                return;
+            
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            foreach(var weaponEntry in WeaponManager.instance.allWeapons)
+            {
+                var modId = weaponEntry.sourceMod.workshopItemId.m_PublishedFileId;
+                if (_weaponsByModId.TryGetValue(modId, out var weaponSet))
+                {
+                    if (weaponSet.ContainsKey(weaponEntry.name))
+                    {
+                        var alternateName = $"{weaponEntry.name}({weaponEntry.slot})";
+                        weaponSet.Add(alternateName, weaponEntry);
+                        Plugin.Logger.LogWarning($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Weapon Entry with name {weaponEntry.name} in group {modId} already found. Registering with alternate name {alternateName} instead.");
+                        continue;
+                    }
+                    weaponSet.Add(weaponEntry.name, weaponEntry);
+                }
+                else
+                {
+                    var newSet = new Dictionary<string, WeaponManager.WeaponEntry>(StringComparer.InvariantCultureIgnoreCase)
+                    {
+                        [weaponEntry.name] = weaponEntry
+                    };
+                    _weaponsByModId.Add(modId, newSet);
+                }
+                
+                //Plugin.Logger.LogInfo($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Registered: {weaponEntry.name} to group {modId}");
+            }
+            stopwatch.Stop();
+            Plugin.Logger.LogInfo($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Operation took {stopwatch.ElapsedMilliseconds}ms.");
+        }
+
+        public static WeaponManager.WeaponEntry GetWeaponEntry(string weaponEntryName, ulong modId)
+        {
+            if (!_weaponsByModId.TryGetValue(modId, out var weaponSet))
+                return null;
+            
+            return !weaponSet.TryGetValue(weaponEntryName, out var weaponEntry) ? null : weaponEntry;
+        }
     }
 
     public class WeaponOverrideManager
@@ -119,6 +167,15 @@ namespace JellyLib.WeaponUtils
             WeaponUtils.OverrideManager.Clear();
             Plugin.Logger.LogInfo($"{nameof(WeaponUtils)}.{nameof(GameManager.RestartLevel)}.Prefix: Cleared weapon overrides.");
             return true;
+        }
+    }
+    
+    [HarmonyPatch(typeof(ModManager), "FinalizeLoadedModContent")]
+    public class PatchFinalizeLoadedModContent
+    {
+        static void Postfix()
+        {
+            WeaponUtils.SortWeaponEntriesByModId();
         }
     }
 }
