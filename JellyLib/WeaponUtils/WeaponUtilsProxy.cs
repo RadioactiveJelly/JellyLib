@@ -11,27 +11,47 @@ namespace JellyLib.WeaponUtils
 
         public static bool IsThrowableWeapon(WeaponProxy weaponProxy)
         {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("weapon cannot be null");
+            }
             return WeaponUtils.IsThrowableWeapon(weaponProxy._value);
         }
 
         public static bool IsMountedWeapon(WeaponProxy weaponProxy)
         {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("weapon cannot be null");
+            }
             return WeaponUtils.IsMountedWeapon(weaponProxy._value);
         }
 
         //If the correct proxy is already being used return true.
         public static bool IsMountedWeapon(MountedWeaponProxy weaponProxy)
         {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("weapon cannot be null");
+            }
             return true;
         }
 
         public static MountedWeaponProxy AsMountedWeapon(WeaponProxy weaponProxy)
         {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("weapon cannot be null");
+            }
             return WeaponUtils.AsMountedWeapon(weaponProxy._value);
         }
 
         public static MountedWeaponProxy AsMountedWeapon(MountedWeaponProxy weaponProxy)
         {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("weapon cannot be null");
+            }
             return weaponProxy;
         }
 
@@ -59,7 +79,7 @@ namespace JellyLib.WeaponUtils
             var weaponEntry = WeaponUtils.GetWeaponEntry(weaponEntryName, modId);
             return weaponEntry == null ? null : new WeaponEntryProxy(weaponEntry);
         }
-
+        
         [MoonSharpHidden]
         public object GetValue()
         {

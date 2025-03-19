@@ -2,30 +2,39 @@
 using MoonSharp.Interpreter;
 using System;
 using JellyLib.FileManager.Wrapper;
+using Lua;
+using UnityEngine;
+using UnityEngine.Bindings;
 
 namespace JellyLib.FileManager.Proxy;
 
 [Proxy(typeof(WFileManager))]
 public class FileManagerProxy : IProxy
 {
-    public static void WriteAllText(string path, string content)
+    public static void WriteAllText(ScriptedBehaviourProxy scriptProxy,string path, string content)
     {
-        WFileManager.WriteAllText(Plugin.filePath + path, content);
+        if (scriptProxy._value == null)
+            return;
+        
+        WFileManager.WriteAllText(scriptProxy._value, path, content);
     }
 
-    public static string ReadAllText(string path)
+    public static string ReadAllText(ScriptedBehaviourProxy scriptProxy, string path)
     {
-        return WFileManager.ReadAllText(Plugin.filePath + path);
+        return scriptProxy._value == null ? string.Empty : WFileManager.ReadAllText(scriptProxy._value, path);
     }
 
-    public static bool FileExists(string path)
+    public static bool FileExists(ScriptedBehaviourProxy scriptProxy, string path)
     {
-        return WFileManager.FileExists(Plugin.filePath + path);
+        return scriptProxy._value != null && WFileManager.FileExists(scriptProxy._value, path);
     }
     
-    public static void CreateDirectory(string path)
+    public static void CreateDirectory(ScriptedBehaviourProxy scriptProxy, string path)
     {
-        WFileManager.CreateDirectory(Plugin.filePath + path);
+        if (scriptProxy._value == null)
+            return;
+        
+        WFileManager.CreateDirectory(scriptProxy._value, path);
     }
     
     [MoonSharpHidden]

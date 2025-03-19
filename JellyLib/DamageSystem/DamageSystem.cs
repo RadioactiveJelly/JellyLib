@@ -5,6 +5,8 @@ using MoonSharp.Interpreter;
 using UnityEngine;
 using System.Linq;
 using System.Diagnostics;
+using JellyLib.EventExtensions;
+using Debug = UnityEngine.Debug;
 
 namespace JellyLib.DamageSystem
 {
@@ -77,7 +79,7 @@ namespace JellyLib.DamageSystem
         public void CalculateDamage(Actor targetActor, ref DamageInfo damageInfo)
         {
             var stopwatch = Stopwatch.StartNew();
-                
+            
             //Early Phase
             var earlyResult = CalculateDamagePhase(targetActor, damageInfo, DamageCalculationPhase.Early);
             damageInfo.healthDamage = earlyResult.Item1;
@@ -85,6 +87,9 @@ namespace JellyLib.DamageSystem
             
             if(_actorData.TryGetValue(targetActor.actorIndex, out var data))
                 data.onBeforeActorLateDamageCalculation?.Invoke(targetActor,damageInfo);
+            
+            if(damageInfo.sourceActor && !damageInfo.sourceActor.aiControlled)
+                EventsManagerPatch.events.onPlayerDealtDamageLateDamageCalculation?.Invoke(damageInfo, new HitInfo(targetActor));
             
             //Late Phase
             var finalResult = CalculateDamagePhase(targetActor, damageInfo, DamageCalculationPhase.Late);
@@ -375,25 +380,22 @@ namespace JellyLib.DamageSystem
             
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onBeforeActorDamageCalculation?.Invoke(__instance, info);
+            if(info.sourceActor && !info.sourceActor.aiControlled)
+                EventsManagerPatch.events.onPlayerDealtDamageBeforeDamageCalculation?.Invoke(info, new HitInfo(__instance));
             DamageSystem.Instance.CalculateDamage(__instance, ref info);
             return true;
         }
 
-        static void Postfix(Actor __instance, ref DamageInfo info)
+        static void Postfix(Actor __instance, ref DamageInfo info, bool __result)
         {
-            if (__instance.isInvulnerable || __instance.dead)
+            //If damage was aborted for any reason.
+            if (!__result)
                 return;
-            
-            bool isSeated = __instance.IsSeated();
-            bool inEnclosedSeat = isSeated && __instance.seat.enclosed;
-            bool enclosedDamagedByDirectFire = isSeated && __instance.seat.enclosedDamagedByDirectFire;
-            if (!info.isPiercing && inEnclosedSeat && (!enclosedDamagedByDirectFire || info.isSplashDamage))
-            {
-                return;
-            }
             
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
+            if(info.sourceActor &&!info.sourceActor.aiControlled)
+                EventsManagerPatch.events.onPlayerDealtDamageAfterDamageCalculation?.Invoke(info, new HitInfo(__instance));
         }
     }
 

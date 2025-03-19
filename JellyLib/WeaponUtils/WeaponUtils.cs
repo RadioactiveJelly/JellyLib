@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using Lua.Proxy;
 using Lua;
 using Steamworks;
@@ -33,6 +34,10 @@ namespace JellyLib.WeaponUtils
         public static WeaponOverrideManager OverrideManager => _overrideManager ??= new WeaponOverrideManager();
 
         private static Dictionary<ulong, Dictionary<string, WeaponManager.WeaponEntry>> _weaponsByModId;
+        private static Dictionary<ulong, string> _modNamesById = new();
+
+        private static bool _doneLoading;
+        public static bool  DoneLoading => _doneLoading;
 
         public static void SortWeaponEntriesByModId()
         {
@@ -63,12 +68,14 @@ namespace JellyLib.WeaponUtils
                         [weaponEntry.name] = weaponEntry
                     };
                     _weaponsByModId.Add(modId, newSet);
+                    _modNamesById.Add(modId, weaponEntry.sourceMod.title);
                 }
                 
                 //Plugin.Logger.LogInfo($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Registered: {weaponEntry.name} to group {modId}");
             }
             stopwatch.Stop();
             Plugin.Logger.LogInfo($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Operation took {stopwatch.ElapsedMilliseconds}ms.");
+            _doneLoading = true;
         }
 
         public static WeaponManager.WeaponEntry GetWeaponEntry(string weaponEntryName, ulong modId)
@@ -77,6 +84,44 @@ namespace JellyLib.WeaponUtils
                 return null;
             
             return !weaponSet.TryGetValue(weaponEntryName, out var weaponEntry) ? null : weaponEntry;
+        }
+
+        public static void DumpWeaponNames()
+        {
+            Directory.CreateDirectory($@"{Plugin.filePath}\dumps\");
+            
+            var dump = "";
+            foreach (var kvp in _weaponsByModId)
+            { 
+                if (kvp.Key == 0)
+                    dump += "Vanilla or RFToolsExport\n";
+                else
+                    dump += $"Mod {_modNamesById[kvp.Key]}(ID: {kvp.Key}): \n";
+                
+                foreach (var weaponName in kvp.Value.Keys)
+                {
+                    dump += "-" + weaponName + "\n";
+                    var weaponEntry = kvp.Value[weaponName];
+                    if (!weaponEntry.prefab)
+                        continue;
+                    var weapon = weaponEntry.prefab.GetComponent<Weapon>();
+                    if (!weapon)
+                        continue;
+                    dump += $"--Max Ammo: {weapon.configuration.ammo}\n";
+                    dump += $"--Max Spare Ammo: {weapon.configuration.spareAmmo}\n";
+                    var projectilePrefab = weapon.configuration.projectilePrefab;
+                    if (!projectilePrefab)
+                        continue;
+                    var projectile = projectilePrefab.GetComponent<Projectile>();
+                    if (!projectile)
+                        continue;
+                    dump += $"--Health Damage: {projectile.configuration.damage}\n";
+                    dump += $"--Balance Damage: {projectile.configuration.balanceDamage}\n";
+                }
+                File.WriteAllText($@"{Plugin.filePath}\dumps\{kvp.Key}.txt", dump);
+                dump = "";
+            }
+            
         }
     }
 

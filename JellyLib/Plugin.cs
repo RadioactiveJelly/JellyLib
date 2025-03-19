@@ -12,6 +12,7 @@ using JellyLib.DamageSystem;
 using JellyLib.FileManager.Proxy;
 using JellyLib.EventExtensions.Proxy;
 using JellyLib.EventExtensions;
+using JellyLib.Steamworks;
 using JellyLib.WeaponUtils;
 using Lua;
 using UnityEngine;
@@ -37,6 +38,7 @@ public class Plugin : BaseUnityPlugin
             script.Globals["DamageCalculationPhase"] = typeof(DamageCalculationPhase);
             script.Globals["WeaponUtils"] = typeof(WeaponUtilsProxy);
             script.Globals["WeaponOverride"] = typeof(WeaponOverrideProxy);
+            script.Globals["SteamworksExtension"] = typeof(SteamworksProxy);
             return true;
         }
     }
@@ -59,6 +61,7 @@ public class Plugin : BaseUnityPlugin
             UserData.RegisterType(typeof(WeaponOverrideProxy), InteropAccessMode.Default, null);
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, WeaponOverride v) => DynValue.FromObject(s, WeaponOverrideProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(WeaponOverride), (DynValue v) => v.ToObject<WeaponOverrideProxy>()._value);
+            UserData.RegisterType(typeof(SteamworksProxy), InteropAccessMode.Default, null);
             return true;
         }
     }
@@ -76,6 +79,7 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(DamageModifierProxy));
             proxyTypesList.Add(typeof(WeaponUtilsProxy));
             proxyTypesList.Add(typeof(WeaponOverrideProxy));
+            proxyTypesList.Add(typeof(SteamworksProxy));
             __result = proxyTypesList.ToArray();
         }
     }
@@ -111,5 +115,22 @@ public class Plugin : BaseUnityPlugin
         _harmonyInstance = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "JellyLib.Patches");
 
         RavenfieldExtensions.AVAILABLE_EXTENSIONS_LOWERCASE = RavenfieldExtensions.AVAILABLE_EXTENSIONS_LOWERCASE.AddToArray("jellylib");
+    }
+
+    private void OnGUI()
+    {
+        if (!GameManager.IsInMainMenu())
+            return;
+        if (!WeaponUtils.WeaponUtils.DoneLoading)
+            return;
+        
+        GUILayout.BeginArea(new Rect(Screen.width - 260f, 10f, 250f, 200f), string.Empty);
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Dump Weapon Names"))
+            WeaponUtils.WeaponUtils.DumpWeaponNames();
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        GUILayout.EndArea();
     }
 }
