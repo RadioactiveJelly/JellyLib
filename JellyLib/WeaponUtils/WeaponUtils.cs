@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Lua.Proxy;
 using Lua;
 using Steamworks;
@@ -50,22 +51,23 @@ namespace JellyLib.WeaponUtils
             foreach(var weaponEntry in WeaponManager.instance.allWeapons)
             {
                 var modId = weaponEntry.sourceMod.workshopItemId.m_PublishedFileId;
+                var weaponEntryName = weaponEntry.name.Trim();
                 if (_weaponsByModId.TryGetValue(modId, out var weaponSet))
                 {
-                    if (weaponSet.ContainsKey(weaponEntry.name))
+                    if (weaponSet.ContainsKey(weaponEntryName))
                     {
-                        var alternateName = $"{weaponEntry.name}({weaponEntry.slot})";
+                        var alternateName = $"{weaponEntryName}({weaponEntry.slot})";
                         weaponSet.Add(alternateName, weaponEntry);
-                        Plugin.Logger.LogWarning($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Weapon Entry with name {weaponEntry.name} in group {modId} already found. Registering with alternate name {alternateName} instead.");
+                        Plugin.Logger.LogWarning($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Weapon Entry with name {weaponEntryName} in group {modId} already found. Registering with alternate name {alternateName} instead.");
                         continue;
                     }
-                    weaponSet.Add(weaponEntry.name, weaponEntry);
+                    weaponSet.Add(weaponEntryName, weaponEntry);
                 }
                 else
                 {
                     var newSet = new Dictionary<string, WeaponManager.WeaponEntry>(StringComparer.InvariantCultureIgnoreCase)
                     {
-                        [weaponEntry.name] = weaponEntry
+                        [weaponEntryName] = weaponEntry
                     };
                     _weaponsByModId.Add(modId, newSet);
                     _modNamesById.Add(modId, weaponEntry.sourceMod.title);
@@ -82,8 +84,9 @@ namespace JellyLib.WeaponUtils
         {
             if (!_weaponsByModId.TryGetValue(modId, out var weaponSet))
                 return null;
-            
-            return !weaponSet.TryGetValue(weaponEntryName, out var weaponEntry) ? null : weaponEntry;
+
+            var trimmedString = weaponEntryName.Trim();
+            return !weaponSet.TryGetValue(trimmedString, out var weaponEntry) ? null : weaponEntry;
         }
 
         public static void DumpWeaponNames()
@@ -96,27 +99,33 @@ namespace JellyLib.WeaponUtils
                 if (kvp.Key == 0)
                     dump += "Vanilla or RFToolsExport\n";
                 else
-                    dump += $"Mod {_modNamesById[kvp.Key]}(ID: {kvp.Key}): \n";
+                    dump += $"Mod {_modNamesById[kvp.Key]} (ID: {kvp.Key}): \n";
                 
                 foreach (var weaponName in kvp.Value.Keys)
                 {
                     dump += "-" + weaponName + "\n";
                     var weaponEntry = kvp.Value[weaponName];
+                    dump += "--Tags: \n";
+                    foreach (var tag in weaponEntry.tags) 
+                        dump += $"----{tag}\n";
                     if (!weaponEntry.prefab)
                         continue;
                     var weapon = weaponEntry.prefab.GetComponent<Weapon>();
                     if (!weapon)
                         continue;
-                    dump += $"--Max Ammo: {weapon.configuration.ammo}\n";
-                    dump += $"--Max Spare Ammo: {weapon.configuration.spareAmmo}\n";
+                    dump += "--Stats: \n";
+                    dump += $"----Max Ammo: {weapon.configuration.ammo}\n";
+                    dump += $"----Max Spare Ammo: {weapon.configuration.spareAmmo}\n";
                     var projectilePrefab = weapon.configuration.projectilePrefab;
                     if (!projectilePrefab)
                         continue;
                     var projectile = projectilePrefab.GetComponent<Projectile>();
                     if (!projectile)
                         continue;
-                    dump += $"--Health Damage: {projectile.configuration.damage}\n";
-                    dump += $"--Balance Damage: {projectile.configuration.balanceDamage}\n";
+                    dump += $"----Health Damage: {projectile.configuration.damage}\n";
+                    dump += $"----Balance Damage: {projectile.configuration.balanceDamage}\n";
+                    dump += $"----Projectile Speed: {projectile.configuration.speed}\n";
+                    dump += $"----Projectile Drop-Off End: {projectile.configuration.dropoffEnd}\n";
                 }
                 File.WriteAllText($@"{Plugin.filePath}\dumps\{kvp.Key}.txt", dump);
                 dump = "";
@@ -221,6 +230,54 @@ namespace JellyLib.WeaponUtils
         static void Postfix()
         {
             WeaponUtils.SortWeaponEntriesByModId();
+        }
+    }
+
+    [HarmonyPatch(typeof(Projectile), nameof(Projectile.Damage))]
+    public class PatchProjectileDamage
+    {
+        static bool Prefix(Projectile __instance, ref float __result)
+        {
+            if (__instance == null) return false;
+            if (__instance.sourceWeapon == null) return true;
+            if (__instance.sourceWeapon.weaponEntry == null) return true;
+            
+            var hasOverride = WeaponUtils.OverrideManager.GetWeaponOverride(__instance.sourceWeapon.weaponEntry, out var weaponOverride);
+            if (!hasOverride) return true;
+
+            if (!weaponOverride.damage.HasValue)
+                return true;
+            
+            MethodInfo methodInfo = typeof(Projectile).GetMethod("DamageDropOff", BindingFlags.NonPublic | BindingFlags.Instance);
+            if(methodInfo == null) return true;
+            
+            __result = (float)methodInfo.Invoke(__instance, null) * weaponOverride.damage.Value;
+            
+            return false;
+        }
+    }
+    
+    [HarmonyPatch(typeof(Projectile), nameof(Projectile.BalanceDamage))]
+    public class PatchProjectileBalanceDamage
+    {
+        static bool Prefix(Projectile __instance, ref float __result)
+        {
+            if (__instance == null) return false;
+            if (__instance.sourceWeapon == null) return true;
+            if (__instance.sourceWeapon.weaponEntry == null) return true;
+            
+            var hasOverride = WeaponUtils.OverrideManager.GetWeaponOverride(__instance.sourceWeapon.weaponEntry, out var weaponOverride);
+            if (!hasOverride) return true;
+
+            if (!weaponOverride.balanceDamage.HasValue)
+                return true;
+            
+            MethodInfo methodInfo = typeof(Projectile).GetMethod("DamageDropOff", BindingFlags.NonPublic | BindingFlags.Instance);
+            if(methodInfo == null) return true;
+            
+            __result = (float)methodInfo.Invoke(__instance, null) * weaponOverride.balanceDamage.Value;
+            
+            return false;
         }
     }
 }

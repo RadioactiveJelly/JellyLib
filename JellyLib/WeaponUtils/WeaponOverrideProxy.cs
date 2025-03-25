@@ -45,6 +45,18 @@ namespace JellyLib.WeaponUtils
             get => _value.autoAdjustAllowedReloads;
             set => _value.autoAdjustAllowedReloads = value;
         }
+
+        public int? damage
+        {
+            get => _value.damage;
+            set => _value.damage = value;
+        }
+
+        public int? balanceDamage
+        {
+            get => _value.balanceDamage;
+            set => _value.balanceDamage = value;
+        }
         
         [MoonSharpUserDataMetamethod("__call")]
         public static WeaponOverrideProxy Call(DynValue _)

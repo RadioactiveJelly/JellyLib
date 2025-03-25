@@ -25,6 +25,7 @@ public class Plugin : BaseUnityPlugin
     public static new ManualLogSource Logger;
     internal static string filePath = Paths.BepInExRootPath + "\\files\\";
     private static Harmony _harmonyInstance;
+    private const int EXPECTED_GAME_VERSION = 31;
     
     [HarmonyPatch(typeof(Registrar), nameof(Registrar.ExposeTypes))]
     public class PatchExposeTypes
@@ -119,18 +120,34 @@ public class Plugin : BaseUnityPlugin
 
     private void OnGUI()
     {
+        if (!GameManager.instance)
+            return;
         if (!GameManager.IsInMainMenu())
             return;
+
+        GUILayout.BeginArea(new Rect(Screen.width - 260f, 10f, 250f, 200f), string.Empty);
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if(EXPECTED_GAME_VERSION != GameManager.instance.buildNumber)
+            GUILayout.Box($"<color=yellow>WARNING: JellyLib is not compatible with this version of Ravenfield. Expected {EXPECTED_GAME_VERSION}. Got {GameManager.instance.buildNumber}</color>");
+        else
+            GUILayout.Box($"JellyLib ({MyPluginInfo.PLUGIN_VERSION})");
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        GUILayout.EndArea();
+        
         if (!WeaponUtils.WeaponUtils.DoneLoading)
             return;
         
-        GUILayout.BeginArea(new Rect(Screen.width - 260f, 10f, 250f, 200f), string.Empty);
+        GUILayout.BeginArea(new Rect(Screen.width - 260f, 40f, 250f, 200f), string.Empty);
+        //Dump weapon data
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         if (GUILayout.Button("Dump Weapon Names"))
             WeaponUtils.WeaponUtils.DumpWeaponNames();
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
+        
         GUILayout.EndArea();
     }
 }
