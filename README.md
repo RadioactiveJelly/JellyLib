@@ -2,7 +2,7 @@
 A library mod that contains useful functions I use for my mutators.
 
 [![Static Badge](https://img.shields.io/badge/Release-0.1.0-green)](https://github.com/RadioactiveJelly/JellyLib/releases/tag/0.1.0)
-[![Static Badge](https://img.shields.io/badge/Discord-JellyfishFields-7289da)](https://discord.gg/8MEyVPDf4Q)
+[![Static Badge](https://img.shields.io/badge/Discord-JellyfishFields-7289da?logo=Discord)](https://discord.gg/8MEyVPDf4Q)
 
 ### Installation
 
