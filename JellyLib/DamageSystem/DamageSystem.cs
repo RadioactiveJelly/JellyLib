@@ -351,8 +351,17 @@ namespace JellyLib.DamageSystem
                 "targetActor",
                 "damageInfo"
             })]
-            //Invoked after all damage calculation is finished.
+            //Invoked after all damage calculation is finished but BEFORE damage is applied to the actor.
             public ScriptEvent<Actor, DamageInfo> onAfterActorDamageCalculation { get; protected set; } = new();
+
+            
+            [CallbackSignature(new string[]
+            {
+                "targetActor",
+                "damageInfo"
+            })]
+            //Invoked after damage is calculated and applied to the actor.
+            public ScriptEvent<Actor, DamageInfo> onAfterDamageApplied { get; protected set; } = new();
         }
     }
 
@@ -383,6 +392,7 @@ namespace JellyLib.DamageSystem
             if(info.sourceActor && !info.sourceActor.aiControlled)
                 EventsManagerPatch.events.onPlayerDealtDamageBeforeDamageCalculation?.Invoke(info, new HitInfo(__instance));
             DamageSystem.Instance.CalculateDamage(__instance, ref info);
+            actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
             return true;
         }
 
@@ -393,7 +403,7 @@ namespace JellyLib.DamageSystem
                 return;
             
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
-            actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
+            actorData.onAfterDamageApplied?.Invoke(__instance, info);
             if(info.sourceActor &&!info.sourceActor.aiControlled)
                 EventsManagerPatch.events.onPlayerDealtDamageAfterDamageCalculation?.Invoke(info, new HitInfo(__instance));
         }

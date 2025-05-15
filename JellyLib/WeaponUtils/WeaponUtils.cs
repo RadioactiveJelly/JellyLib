@@ -82,9 +82,10 @@ namespace JellyLib.WeaponUtils
 
         public static WeaponManager.WeaponEntry GetWeaponEntry(string weaponEntryName, ulong modId)
         {
-            if (!_weaponsByModId.TryGetValue(modId, out var weaponSet))
+            var key = _weaponsByModId.ContainsKey(modId) ? modId : 0;
+            if (!_weaponsByModId.TryGetValue(key, out var weaponSet))
                 return null;
-
+            
             var trimmedString = weaponEntryName.Trim();
             return !weaponSet.TryGetValue(trimmedString, out var weaponEntry) ? null : weaponEntry;
         }
@@ -116,6 +117,12 @@ namespace JellyLib.WeaponUtils
                     dump += "--Stats: \n";
                     dump += $"----Max Ammo: {weapon.configuration.ammo}\n";
                     dump += $"----Max Spare Ammo: {weapon.configuration.spareAmmo}\n";
+                    dump += $"----Kickback: {weapon.configuration.kickback}\n";
+                    dump += $"----Random Kick: {weapon.configuration.randomKick}\n";
+                    dump += $"----Snap Magnitude: {weapon.configuration.snapMagnitude}\n";
+                    dump += $"----Snap Duration: {weapon.configuration.snapDuration}\n";
+                    dump += $"----Snap Frequency: {weapon.configuration.snapFrequency}\n";
+                    dump += $"----Cooldown: {weapon.configuration.cooldown}\n";
                     var projectilePrefab = weapon.configuration.projectilePrefab;
                     if (!projectilePrefab)
                         continue;
@@ -199,6 +206,24 @@ namespace JellyLib.WeaponUtils
                 }
                 __result.configuration.allowedReloads = allowedReloads.ToArray();
             }
+
+            if (weaponOverride.kickback.HasValue)
+                __result.configuration.kickback = weaponOverride.kickback.Value;
+            
+            if (weaponOverride.randomKick.HasValue)
+                __result.configuration.kickback = weaponOverride.randomKick.Value;
+            
+            if (weaponOverride.snapMagnitude.HasValue)
+                __result.configuration.kickback = weaponOverride.snapMagnitude.Value;
+            
+            if (weaponOverride.snapDuration.HasValue)
+                __result.configuration.kickback = weaponOverride.snapDuration.Value;
+            
+            if (weaponOverride.snapFrequency.HasValue)
+                __result.configuration.kickback = weaponOverride.snapFrequency.Value;
+            
+            if(weaponOverride.cooldown.HasValue)
+                __result.configuration.cooldown = weaponOverride.cooldown.Value;
         }
     }
     
@@ -248,10 +273,9 @@ namespace JellyLib.WeaponUtils
             if (!weaponOverride.damage.HasValue)
                 return true;
             
-            MethodInfo methodInfo = typeof(Projectile).GetMethod("DamageDropOff", BindingFlags.NonPublic | BindingFlags.Instance);
-            if(methodInfo == null) return true;
+            var dropOff = __instance.configuration.damageDropOff.Evaluate(__instance.travelDistance / __instance.configuration.dropoffEnd);
             
-            __result = (float)methodInfo.Invoke(__instance, null) * weaponOverride.damage.Value;
+            __result = dropOff * weaponOverride.damage.Value;
             
             return false;
         }
@@ -272,10 +296,8 @@ namespace JellyLib.WeaponUtils
             if (!weaponOverride.balanceDamage.HasValue)
                 return true;
             
-            MethodInfo methodInfo = typeof(Projectile).GetMethod("DamageDropOff", BindingFlags.NonPublic | BindingFlags.Instance);
-            if(methodInfo == null) return true;
-            
-            __result = (float)methodInfo.Invoke(__instance, null) * weaponOverride.balanceDamage.Value;
+            var dropOff = __instance.configuration.damageDropOff.Evaluate(__instance.travelDistance / __instance.configuration.dropoffEnd);
+            __result = dropOff * weaponOverride.balanceDamage.Value;
             
             return false;
         }

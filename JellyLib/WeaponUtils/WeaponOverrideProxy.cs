@@ -57,6 +57,42 @@ namespace JellyLib.WeaponUtils
             get => _value.balanceDamage;
             set => _value.balanceDamage = value;
         }
+
+        public float? kickback
+        {
+            get => _value.kickback;
+            set => _value.kickback = value;
+        }
+        
+        public float? randomKick
+        {
+            get => _value.randomKick;
+            set => _value.randomKick = value;
+        }
+        
+        public float? snapMagnitude
+        {
+            get => _value.snapMagnitude;
+            set => _value.snapMagnitude = value;
+        }
+        
+        public float? snapDuration
+        {
+            get => _value.snapDuration;
+            set => _value.snapDuration = value;
+        }
+        
+        public float? snapFrequency
+        {
+            get => _value.snapFrequency;
+            set => _value.snapFrequency = value;
+        }
+        
+        public float? cooldown
+        {
+            get => _value.cooldown;
+            set => _value.cooldown = value;
+        }
         
         [MoonSharpUserDataMetamethod("__call")]
         public static WeaponOverrideProxy Call(DynValue _)

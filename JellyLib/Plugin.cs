@@ -12,9 +12,11 @@ using JellyLib.DamageSystem;
 using JellyLib.FileManager.Proxy;
 using JellyLib.EventExtensions.Proxy;
 using JellyLib.EventExtensions;
+using JellyLib.GameModeUtils;
 using JellyLib.Steamworks;
 using JellyLib.WeaponUtils;
 using Lua;
+using Ravenfield.SpecOps;
 using UnityEngine;
 
 namespace JellyLib;
@@ -40,6 +42,8 @@ public class Plugin : BaseUnityPlugin
             script.Globals["WeaponUtils"] = typeof(WeaponUtilsProxy);
             script.Globals["WeaponOverride"] = typeof(WeaponOverrideProxy);
             script.Globals["SteamworksExtension"] = typeof(SteamworksProxy);
+            script.Globals["GameModeUtils"] = typeof(GameModeUtilsProxy);
+            script.Globals["GameObjective"] = typeof(ObjectiveProxy);
             return true;
         }
     }
@@ -63,6 +67,10 @@ public class Plugin : BaseUnityPlugin
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, WeaponOverride v) => DynValue.FromObject(s, WeaponOverrideProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(WeaponOverride), (DynValue v) => v.ToObject<WeaponOverrideProxy>()._value);
             UserData.RegisterType(typeof(SteamworksProxy), InteropAccessMode.Default, null);
+            UserData.RegisterType(typeof(GameModeUtilsProxy), InteropAccessMode.Default, null);
+            UserData.RegisterType(typeof(ObjectiveProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, SpecOpsObjective v) => DynValue.FromObject(s, ObjectiveProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(SpecOpsObjective), (DynValue v) => v.ToObject<ObjectiveProxy>()._value);
             return true;
         }
     }
@@ -81,6 +89,8 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(WeaponUtilsProxy));
             proxyTypesList.Add(typeof(WeaponOverrideProxy));
             proxyTypesList.Add(typeof(SteamworksProxy));
+            proxyTypesList.Add(typeof(GameModeUtilsProxy));
+            proxyTypesList.Add(typeof(ObjectiveProxy));
             __result = proxyTypesList.ToArray();
         }
     }
