@@ -1,7 +1,8 @@
 # JellyLib
 A library mod that contains useful functions I use for my mutators.
 
-[![Discord](https://img.shields.io/discord/458403487982682113.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/p7WvaAaY)
+[![Static Badge](https://img.shields.io/badge/Release-0.1.0-green)](https://github.com/RadioactiveJelly/JellyLib/releases/tag/0.1.0)
+[![Static Badge](https://img.shields.io/badge/Discord-JellyfishFields-7289da)](https://discord.gg/8MEyVPDf4Q)
 
 ### Installation
 
