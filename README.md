@@ -15,7 +15,7 @@ Once BepInEx is installed, run the game once. Afterwards, place the JellyLib.dll
 
 ### Documentation
 
-Coming soon!
+Coming soon! For developers interested in using this mod's features feel free to message me on Discord.
 
 ### Features
 * File Read/Writing
