@@ -89,7 +89,7 @@ namespace JellyLib.DamageSystem
                 data.onBeforeActorLateDamageCalculation?.Invoke(targetActor,damageInfo);
             
             if(damageInfo.sourceActor && !damageInfo.sourceActor.aiControlled)
-                EventsManagerPatch.events.onPlayerDealtDamageLateDamageCalculation?.Invoke(damageInfo, new HitInfo(targetActor));
+                EventsManager.events.onPlayerDealtDamageLateDamageCalculation?.Invoke(damageInfo, new HitInfo(targetActor));
             
             //Late Phase
             var finalResult = CalculateDamagePhase(targetActor, damageInfo, DamageCalculationPhase.Late);
@@ -390,7 +390,7 @@ namespace JellyLib.DamageSystem
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onBeforeActorDamageCalculation?.Invoke(__instance, info);
             if(info.sourceActor && !info.sourceActor.aiControlled)
-                EventsManagerPatch.events.onPlayerDealtDamageBeforeDamageCalculation?.Invoke(info, new HitInfo(__instance));
+                EventsManager.events.onPlayerDealtDamageBeforeDamageCalculation?.Invoke(info, new HitInfo(__instance));
             DamageSystem.Instance.CalculateDamage(__instance, ref info);
             actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
             return true;
@@ -405,7 +405,7 @@ namespace JellyLib.DamageSystem
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onAfterDamageApplied?.Invoke(__instance, info);
             if(info.sourceActor &&!info.sourceActor.aiControlled)
-                EventsManagerPatch.events.onPlayerDealtDamageAfterDamageCalculation?.Invoke(info, new HitInfo(__instance));
+                EventsManager.events.onPlayerDealtDamageAfterDamageCalculation?.Invoke(info, new HitInfo(__instance));
         }
     }
 

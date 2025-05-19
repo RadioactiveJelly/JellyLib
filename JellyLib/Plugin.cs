@@ -112,7 +112,7 @@ public class Plugin : BaseUnityPlugin
     {
         static void Postfix(RavenscriptManager __instance)
         {
-            __instance.gameObject.AddComponent<EventsManagerPatch>();
+            __instance.gameObject.AddComponent<EventsManager>();
         }
     }
     

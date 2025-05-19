@@ -11,16 +11,13 @@ using UnityEngine.Events;
 namespace JellyLib.EventExtensions
 {
     [HarmonyPatch(typeof(RavenscriptManager), "ResolveCurrentlyInvokingSourceScript")]
-    public class EventsManagerPatch : MonoBehaviour
+    public class EventsManager : MonoBehaviour
     {
         private RavenscriptEventExtensions _events;
 
-        public static RavenscriptEventExtensions events
-        {
-            get => _instance._events;
-        }
+        public static RavenscriptEventExtensions events => _instance._events;
 
-        private static EventsManagerPatch _instance;
+        private static EventsManager _instance;
 
         private void Awake()
         {
@@ -29,19 +26,22 @@ namespace JellyLib.EventExtensions
             _events = gameObject.AddComponent<RavenscriptEventExtensions>();
             engine.Set(NameAttribute.GetName(typeof(RavenscriptEventExtensions)), this._events);
         }
+    }
 
+    [HarmonyPatch(typeof(RavenscriptManager), "ResolveCurrentlyInvokingSourceScript")]
+    public class PatchResolveCurrentlyInvokingSourceScript
+    {
         static void Postfix(ref ScriptedBehaviour __result)
         {
-            if (!_instance._events.IsCallStackEmpty())
+            if (!EventsManager.events.IsCallStackEmpty())
             {
                 ScriptedBehaviour currentInvokingListenerScript =
-                    _instance._events.GetCurrentEvent().GetCurrentInvokingListenerScript();
+                    EventsManager.events.GetCurrentEvent().GetCurrentInvokingListenerScript();
                 if (currentInvokingListenerScript != null)
                 {
                     __result = currentInvokingListenerScript;
                 }
             }
-
         }
     }
     
@@ -50,7 +50,7 @@ namespace JellyLib.EventExtensions
     {
         static bool Prefix(ScriptEvent __instance)
         {
-            if (EventsManagerPatch.events.IsCallStackFull())
+            if (EventsManager.events.IsCallStackFull())
             {
                 StackTraceLogType stackTraceLogType = Application.GetStackTraceLogType(LogType.Error);
                 Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.None);
@@ -58,12 +58,12 @@ namespace JellyLib.EventExtensions
                 Application.SetStackTraceLogType(LogType.Error, stackTraceLogType);
                 return false;
             }
-            EventsManagerPatch.events.PushCallStack(__instance);
+            EventsManager.events.PushCallStack(__instance);
             return true;
         }
         static void Postfix()
         {
-            EventsManagerPatch.events.PopCallStack();
+            EventsManager.events.PopCallStack();
         }
     }
     [HarmonyPatch(typeof(ScriptEventCache), "GetOrCreateEvent")]
@@ -73,7 +73,7 @@ namespace JellyLib.EventExtensions
         {
             if (!___events.ContainsKey(unityEvent))
             {
-                ScriptEvent scriptEvent = EventsManagerPatch.events.CreateEvent();
+                ScriptEvent scriptEvent = EventsManager.events.CreateEvent();
                 ___events.Add(unityEvent, scriptEvent);
                 __result = new ScriptEventCache.GetOrCreateResult(scriptEvent, wasCreated: true);
                 return false;
@@ -88,7 +88,7 @@ namespace JellyLib.EventExtensions
         {
             if (!___actions.ContainsKey(action))
             {
-                ScriptEvent scriptEvent = EventsManagerPatch.events.CreateEvent();
+                ScriptEvent scriptEvent = EventsManager.events.CreateEvent();
                 ___actions.Add(action, scriptEvent);
                 __result = new ScriptEventCache.GetOrCreateResult(scriptEvent, true);
                 return false;
