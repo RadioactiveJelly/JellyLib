@@ -35,12 +35,13 @@ public static class WFileManager
 
     private static ulong GetModId(ScriptedBehaviour script)
     {
-        if (script.sourceMutator.sourceMod == null)
+        if (script.sourceModReference == null)
         {
             Plugin.Logger.LogWarning($"No associated mod found. Using default folder instead.");
             return 0;
         }
-        var modId = script.sourceMutator.sourceMod.workshopItemId.m_PublishedFileId;
+
+        var modId = script.sourceModReference.modInformation.workshopItemId.m_PublishedFileId;
         return modId;
     }
 }

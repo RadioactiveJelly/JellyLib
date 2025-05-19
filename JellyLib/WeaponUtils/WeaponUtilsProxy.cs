@@ -74,10 +74,11 @@ namespace JellyLib.WeaponUtils
             WeaponUtils.OverrideManager.RemoveWeaponOverride(weaponEntryProxy._value);
         }
 
-        public static WeaponEntryProxy GetWeaponEntry(string weaponEntryName, ulong modId)
+        public static WeaponManager.WeaponEntry GetWeaponEntry(string weaponEntryName, ulong modId)
         {
             var weaponEntry = WeaponUtils.GetWeaponEntry(weaponEntryName, modId);
-            return weaponEntry == null ? null : new WeaponEntryProxy(weaponEntry);
+            return weaponEntry;
+            //return weaponEntry == null ? null : new WeaponEntryProxy(weaponEntry);
         }
         
         [MoonSharpHidden]
