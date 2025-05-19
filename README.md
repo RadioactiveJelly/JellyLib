@@ -25,7 +25,8 @@ Coming soon! For developers interested in using this mod's features feel free to
   * onAmmoBoxResupply
   * onPlayerFireWeapon
  * Extended Damage System
-   * Will effectively replace DamageCore
+   * Outgoing and incoming damage modifiers
+   * Expanded damage events
   * Weapon Utilities
     * Will effectively replace WeaponTweaker
 
