@@ -15,9 +15,11 @@ using JellyLib.EventExtensions;
 using JellyLib.GameModeUtils;
 using JellyLib.Steamworks;
 using JellyLib.WeaponUtils;
+using JellyLib.Extensions;
 using Lua;
 using Ravenfield.SpecOps;
 using UnityEngine;
+
 
 namespace JellyLib;
 
@@ -71,6 +73,7 @@ public class Plugin : BaseUnityPlugin
             UserData.RegisterType(typeof(ObjectiveProxy), InteropAccessMode.Default, null);
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, SpecOpsObjective v) => DynValue.FromObject(s, ObjectiveProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(SpecOpsObjective), (DynValue v) => v.ToObject<ObjectiveProxy>()._value);
+            UserData.RegisterExtensionType(typeof(ActorExtensions));
             return true;
         }
     }
