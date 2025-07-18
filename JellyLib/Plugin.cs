@@ -46,6 +46,8 @@ public class Plugin : BaseUnityPlugin
             script.Globals["SteamworksExtension"] = typeof(SteamworksProxy);
             script.Globals["GameModeUtils"] = typeof(GameModeUtilsProxy);
             script.Globals["GameObjective"] = typeof(ObjectiveProxy);
+            script.Globals["HealInfo"] = typeof(HealInfoProxy);
+            script.Globals["JellyLib"] = typeof(JellyLibProxy);
             return true;
         }
     }
@@ -74,6 +76,10 @@ public class Plugin : BaseUnityPlugin
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, SpecOpsObjective v) => DynValue.FromObject(s, ObjectiveProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(SpecOpsObjective), (DynValue v) => v.ToObject<ObjectiveProxy>()._value);
             UserData.RegisterExtensionType(typeof(ActorExtensions));
+            UserData.RegisterType(typeof(HealInfoProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, HealInfo v) => DynValue.FromObject(s, HealInfoProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(HealInfo), (DynValue v) => v.ToObject<HealInfoProxy>()._value);
+            UserData.RegisterType(typeof(JellyLibProxy), InteropAccessMode.Default, null);
             return true;
         }
     }
@@ -94,6 +100,8 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(SteamworksProxy));
             proxyTypesList.Add(typeof(GameModeUtilsProxy));
             proxyTypesList.Add(typeof(ObjectiveProxy));
+            proxyTypesList.Add(typeof(HealInfoProxy));
+            proxyTypesList.Add(typeof(JellyLibProxy));
             __result = proxyTypesList.ToArray();
         }
     }
@@ -162,5 +170,27 @@ public class Plugin : BaseUnityPlugin
         GUILayout.EndHorizontal();
         
         GUILayout.EndArea();
+    }
+}
+
+[Proxy(typeof(Plugin))]
+public class JellyLibProxy : IProxy
+{
+    public static int VersionCompare(string versionString)
+    {
+        var localVersion = new Version(MyPluginInfo.PLUGIN_VERSION);
+        var versionToCompare = new Version(versionString);
+        
+        return localVersion.CompareTo(versionToCompare);
+    }
+
+    public static string GetPluginVersion()
+    {
+        return MyPluginInfo.PLUGIN_VERSION;
+    }
+    
+    public object GetValue()
+    {
+        throw new InvalidOperationException("Proxied type is static.");
     }
 }

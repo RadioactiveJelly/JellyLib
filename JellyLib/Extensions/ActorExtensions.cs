@@ -2,6 +2,7 @@
 using MoonSharp.Interpreter;
 using Lua.Proxy;
 using JellyLib.DamageSystem;
+using JellyLib.EventExtensions;
 
 namespace JellyLib.Extensions
 {
@@ -48,6 +49,32 @@ namespace JellyLib.Extensions
             
             var actorDamageData = DamageSystem.DamageSystem.Instance.GetActorData(actor.actorIndex);
             return actorDamageData == null ? null : ScriptEventProxy.New(actorDamageData.onAfterDamageApplied);
+        }
+
+        public static void Heal(this ActorProxy actorProxy, float amount, Actor source = null, Weapon weapon = null)
+        {
+            var actor = actorProxy._value;
+            if (actor == null)
+                return;
+
+            if (actor.dead)
+                return;
+
+            var healInfo = new HealInfo
+            {
+                targetActor = actor,
+                sourceActor = source,
+                amountHealed = amount,
+                sourceWeapon = weapon
+            };
+
+            EventsManager.events.onBeforeActorHealed?.Invoke(healInfo);
+            
+            actor.health += amount;
+            if(actor.health > actor.maxHealth) 
+                actor.health = actor.maxHealth;
+
+            EventsManager.events.onAfterActorHealed?.Invoke(healInfo);
         }
     }
 }

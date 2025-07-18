@@ -8,6 +8,7 @@ using UnityEngine;
 using HarmonyLib;
 using JellyLib.DamageSystem;
 using Lua.Proxy;
+using MoonSharp.Interpreter;
 
 namespace JellyLib.EventExtensions
 {
@@ -52,6 +53,11 @@ namespace JellyLib.EventExtensions
         public ScriptEvent<DamageInfo, HitInfo> onPlayerDealtDamageBeforeDamageCalculation { get; protected set; }
         public ScriptEvent<DamageInfo, HitInfo> onPlayerDealtDamageLateDamageCalculation { get; protected set; }
         public ScriptEvent<DamageInfo, HitInfo> onPlayerDealtDamageAfterDamageCalculation { get; protected set; }
+        
+        public ScriptEvent<HealInfo> onBeforeActorHealed { get; protected set; }
+        
+        public ScriptEvent<HealInfo> onAfterActorHealed { get; protected set; }
+        
     }
     
     [HarmonyPatch(typeof(Projectile), "Travel")]
@@ -144,6 +150,7 @@ namespace JellyLib.EventExtensions
             if(fieldInfo != null)
                 fieldInfo.SetValue(__instance, expireTime);
             
+            
             return false;
             
         }
@@ -179,6 +186,82 @@ namespace JellyLib.EventExtensions
                 
             EventsManager.events.onPlayerFireWeapon?.Invoke(newProxy);
             return true;
+        }
+    }
+
+    public struct HealInfo(Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon)
+    {
+        public Actor targetActor = targetActor;
+        public Actor sourceActor = sourceActor;
+        public float amountHealed = amountHealed;
+        public Weapon sourceWeapon = sourceWeapon;
+        
+        public static HealInfo Default => new (null, null, 0, null);
+        
+        public HealInfo(HealInfo source) : this(source.targetActor,source.sourceActor, source.amountHealed, source.sourceWeapon) { }
+    }
+
+    [Proxy(typeof(HealInfo))]
+    public class HealInfoProxy : IProxy
+    {
+        [MoonSharpHidden]
+        public HealInfo _value;
+        
+        public static HealInfo Default => HealInfo.Default;
+
+        [MoonSharpHidden]
+        public HealInfoProxy(HealInfo value)
+        {
+            _value = value;
+        }
+        
+        public HealInfoProxy()
+        {
+            _value = HealInfo.Default;
+        }
+
+        public HealInfoProxy(HealInfoProxy source)
+        {
+            if (source == null)
+            {
+                throw new ScriptRuntimeException("argument 'source' is nil");
+            }
+            _value = source._value;
+        }
+
+        public Actor targetActor
+        {
+            get => _value.targetActor;
+            set => _value.targetActor = value;
+        }
+        
+        public Actor sourceActor
+        {
+            get => _value.sourceActor;
+            set => _value.sourceActor = value;
+        }
+        
+        public float amountHealed
+        {
+            get => _value.amountHealed;
+            set => _value.amountHealed = value;
+        }
+        
+        public Weapon sourceWeapon
+        {
+            get => _value.sourceWeapon;
+            set => _value.sourceWeapon = value;
+        }
+
+        public object GetValue()
+        {
+            return _value;
+        }
+        
+        [MoonSharpHidden]
+        public static HealInfoProxy New(HealInfo healInfo)
+        {
+            return new HealInfoProxy(healInfo);
         }
     }
 }

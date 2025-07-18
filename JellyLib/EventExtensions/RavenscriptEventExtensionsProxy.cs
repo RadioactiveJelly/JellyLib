@@ -29,6 +29,8 @@ namespace JellyLib.EventExtensions.Proxy
         public ScriptEventProxy onPlayerDealtDamageBeforeDamageCalculation => ScriptEventProxy.New(_value.onPlayerDealtDamageBeforeDamageCalculation);
         public ScriptEventProxy onPlayerDealtDamageLateDamageCalculation => ScriptEventProxy.New(_value.onPlayerDealtDamageLateDamageCalculation);
         public ScriptEventProxy onPlayerDealtDamageAfterDamageCalculation => ScriptEventProxy.New(_value.onPlayerDealtDamageAfterDamageCalculation);
+        public ScriptEventProxy onBeforeActorHealed => ScriptEventProxy.New(_value.onBeforeActorHealed);
+        public ScriptEventProxy onAfterActorHealed => ScriptEventProxy.New(_value.onAfterActorHealed);
         
         [MoonSharpHidden]
         public object GetValue()
