@@ -56,7 +56,7 @@ namespace JellyLib.EventExtensions
         
         public ScriptEvent<HealInfo> onBeforeActorHealed { get; protected set; }
         
-        public ScriptEvent<HealInfo> onAfterActorHealed { get; protected set; }
+        public ScriptEvent<HealInfo, float> onAfterActorHealed { get; protected set; }
         
     }
     

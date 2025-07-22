@@ -3,6 +3,7 @@ using MoonSharp.Interpreter;
 using Lua.Proxy;
 using JellyLib.DamageSystem;
 using JellyLib.EventExtensions;
+using UnityEngine;
 
 namespace JellyLib.Extensions
 {
@@ -70,11 +71,14 @@ namespace JellyLib.Extensions
 
             EventsManager.events.onBeforeActorHealed?.Invoke(healInfo);
             
+            var missingHealth = actor.maxHealth - actor.health;
+            var actualAmountHealed = Mathf.Clamp(amount, 0, missingHealth);
+            
             actor.health += amount;
             if(actor.health > actor.maxHealth) 
                 actor.health = actor.maxHealth;
 
-            EventsManager.events.onAfterActorHealed?.Invoke(healInfo);
+            EventsManager.events.onAfterActorHealed?.Invoke(healInfo, actualAmountHealed);
         }
     }
 }

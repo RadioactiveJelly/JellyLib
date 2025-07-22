@@ -16,6 +16,7 @@ using JellyLib.GameModeUtils;
 using JellyLib.Steamworks;
 using JellyLib.WeaponUtils;
 using JellyLib.Extensions;
+using JellyLib.Utilities;
 using Lua;
 using Ravenfield.SpecOps;
 using UnityEngine;
@@ -48,6 +49,7 @@ public class Plugin : BaseUnityPlugin
             script.Globals["GameObjective"] = typeof(ObjectiveProxy);
             script.Globals["HealInfo"] = typeof(HealInfoProxy);
             script.Globals["JellyLib"] = typeof(JellyLibProxy);
+            script.Globals["ObjectPool"] = typeof(ObjectPoolProxy);
             return true;
         }
     }
@@ -80,6 +82,9 @@ public class Plugin : BaseUnityPlugin
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, HealInfo v) => DynValue.FromObject(s, HealInfoProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(HealInfo), (DynValue v) => v.ToObject<HealInfoProxy>()._value);
             UserData.RegisterType(typeof(JellyLibProxy), InteropAccessMode.Default, null);
+            UserData.RegisterType(typeof(ObjectPoolProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, ObjectPool v) => DynValue.FromObject(s, ObjectPoolProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(ObjectPool), (DynValue v) => v.ToObject<ObjectPoolProxy>()._value);
             return true;
         }
     }
@@ -102,6 +107,7 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(ObjectiveProxy));
             proxyTypesList.Add(typeof(HealInfoProxy));
             proxyTypesList.Add(typeof(JellyLibProxy));
+            proxyTypesList.Add(typeof(ObjectPoolProxy));
             __result = proxyTypesList.ToArray();
         }
     }
