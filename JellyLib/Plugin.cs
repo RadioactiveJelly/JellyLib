@@ -18,6 +18,7 @@ using JellyLib.WeaponUtils;
 using JellyLib.Extensions;
 using JellyLib.Utilities;
 using Lua;
+using Lua.Wrapper;
 using Ravenfield.SpecOps;
 using UnityEngine;
 
@@ -42,6 +43,7 @@ public class Plugin : BaseUnityPlugin
             script.Globals["DamageSystemExtension"] = typeof(DamageSystemProxy);
             script.Globals["DamageModifier"] = typeof(DamageModifierProxy);
             script.Globals["DamageCalculationPhase"] = typeof(DamageCalculationPhase);
+            script.Globals["DamageRelationship"] = typeof(DamageRelationship);
             script.Globals["WeaponUtils"] = typeof(WeaponUtilsProxy);
             script.Globals["WeaponOverride"] = typeof(WeaponOverrideProxy);
             script.Globals["SteamworksExtension"] = typeof(SteamworksProxy);
@@ -68,6 +70,7 @@ public class Plugin : BaseUnityPlugin
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, DamageModifier v) => DynValue.FromObject(s, DamageModifierProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(DamageModifier), (DynValue v) => v.ToObject<DamageModifierProxy>()._value);
             UserData.RegisterType(typeof(DamageCalculationPhase), InteropAccessMode.Default, null);
+            UserData.RegisterType(typeof(DamageRelationship), InteropAccessMode.Default, null);
             UserData.RegisterType(typeof(WeaponUtilsProxy), InteropAccessMode.Default, null);
             UserData.RegisterType(typeof(WeaponOverrideProxy), InteropAccessMode.Default, null);
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, WeaponOverride v) => DynValue.FromObject(s, WeaponOverrideProxy.New(v)));
@@ -120,6 +123,7 @@ public class Plugin : BaseUnityPlugin
             List<Type> allowedTypesList = new List<Type>(__result);
             
             allowedTypesList.Add(typeof(DamageCalculationPhase));
+            allowedTypesList.Add(typeof(DamageRelationship));
             __result = allowedTypesList.ToArray();
         }
     }

@@ -163,7 +163,7 @@ namespace JellyLib.EventExtensions
         {
             foreach (Actor actor in ActorManager.AliveActorsInRange(__instance.transform.position, 6f))
             {
-                var success = actor.ResupplyHealth();
+                var success = actor.ResupplyAmmo();
                 EventsManager.events.onAmmoBoxResupply?.Invoke(__instance.killCredit, actor, success);
             }
 
@@ -189,16 +189,17 @@ namespace JellyLib.EventExtensions
         }
     }
 
-    public struct HealInfo(Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon)
+    public struct HealInfo(Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon, WeaponManager.WeaponEntry sourceWeaponEntry)
     {
         public Actor targetActor = targetActor;
         public Actor sourceActor = sourceActor;
         public float amountHealed = amountHealed;
         public Weapon sourceWeapon = sourceWeapon;
+        public WeaponManager.WeaponEntry sourceWeaponEntry = sourceWeaponEntry;
         
-        public static HealInfo Default => new (null, null, 0, null);
+        public static HealInfo Default => new (null, null, 0, null, null);
         
-        public HealInfo(HealInfo source) : this(source.targetActor,source.sourceActor, source.amountHealed, source.sourceWeapon) { }
+        public HealInfo(HealInfo source) : this(source.targetActor,source.sourceActor, source.amountHealed, source.sourceWeapon, source.sourceWeaponEntry) { }
     }
 
     [Proxy(typeof(HealInfo))]
@@ -218,6 +219,12 @@ namespace JellyLib.EventExtensions
         public HealInfoProxy()
         {
             _value = HealInfo.Default;
+        }
+
+        public HealInfoProxy(Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon = null,
+            WeaponManager.WeaponEntry sourceWeaponEntry = null)
+        {
+            _value = new HealInfo(targetActor, sourceActor, amountHealed, sourceWeapon, sourceWeaponEntry);
         }
 
         public HealInfoProxy(HealInfoProxy source)
@@ -253,6 +260,12 @@ namespace JellyLib.EventExtensions
             set => _value.sourceWeapon = value;
         }
 
+        public WeaponManager.WeaponEntry sourceWeaponEntry
+        {
+            get => _value.sourceWeaponEntry;
+            set => _value.sourceWeaponEntry = value;
+        }
+
         public object GetValue()
         {
             return _value;
@@ -262,6 +275,12 @@ namespace JellyLib.EventExtensions
         public static HealInfoProxy New(HealInfo healInfo)
         {
             return new HealInfoProxy(healInfo);
+        }
+        
+        [MoonSharpUserDataMetamethod("__call")]
+        public static HealInfoProxy Call(DynValue _,Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon, WeaponManager.WeaponEntry sourceWeaponEntry)
+        {
+            return new HealInfoProxy(targetActor,sourceActor,amountHealed,sourceWeapon,sourceWeaponEntry);
         }
     }
 }

@@ -52,7 +52,7 @@ namespace JellyLib.Extensions
             return actorDamageData == null ? null : ScriptEventProxy.New(actorDamageData.onAfterDamageApplied);
         }
 
-        public static void Heal(this ActorProxy actorProxy, float amount, Actor source = null, Weapon weapon = null)
+        public static void Heal(this ActorProxy actorProxy, float amount, Actor source = null, Weapon weapon = null, WeaponManager.WeaponEntry weaponEntry = null)
         {
             var actor = actorProxy._value;
             if (actor == null)
@@ -66,15 +66,32 @@ namespace JellyLib.Extensions
                 targetActor = actor,
                 sourceActor = source,
                 amountHealed = amount,
-                sourceWeapon = weapon
+                sourceWeapon = weapon,
+                sourceWeaponEntry = weaponEntry
             };
+
+            //If no weapon entry was passed but a weapon was provided, set the weapon entry value automatically.
+            if (weaponEntry == null && weapon)
+                healInfo.sourceWeaponEntry = weapon.weaponEntry;
+            
+            actorProxy.Heal(healInfo);
+        }
+
+        public static void Heal(this ActorProxy actorProxy, HealInfo healInfo)
+        {
+            var actor = actorProxy._value;
+            if (actor == null)
+                return;
+
+            if (actor.dead)
+                return;
 
             EventsManager.events.onBeforeActorHealed?.Invoke(healInfo);
             
             var missingHealth = actor.maxHealth - actor.health;
-            var actualAmountHealed = Mathf.Clamp(amount, 0, missingHealth);
+            var actualAmountHealed = Mathf.Clamp(healInfo.amountHealed, 0, missingHealth);
             
-            actor.health += amount;
+            actor.health += healInfo.amountHealed;
             if(actor.health > actor.maxHealth) 
                 actor.health = actor.maxHealth;
 

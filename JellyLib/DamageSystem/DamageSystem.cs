@@ -6,16 +6,82 @@ using UnityEngine;
 using System.Linq;
 using System.Diagnostics;
 using JellyLib.EventExtensions;
+using Lua.Wrapper;
+using Ravenfield.Trigger;
 using Debug = UnityEngine.Debug;
 
 namespace JellyLib.DamageSystem
 {
+    public enum DamageRelationship
+    {
+        Unknown = -1,
+        PlayerToSelf = 0,
+        PlayerToAlly = 1,
+        PlayerToEnemy = 2,
+        AllyToPlayer = 3,
+        AllyToAlly = 4,
+        AllyToEnemy = 5,
+        EnemyToPlayer = 6,
+        EnemyToAlly = 7,
+        EnemyToEnemy = 8
+    }
+    
     public class DamageSystem
     {
         private readonly Dictionary<int, ActorDamageData> _actorData = new();
         
         private static DamageSystem _instance;
         public static DamageSystem Instance => _instance ??= new DamageSystem();
+
+        private readonly Dictionary<DamageRelationship, float> _healthDamageGlobalMultipliers = new ()
+        {
+            [DamageRelationship.Unknown] = 1,
+            [DamageRelationship.PlayerToSelf] = 1,
+            [DamageRelationship.PlayerToAlly] = 1,
+            [DamageRelationship.PlayerToEnemy] = 1,
+            [DamageRelationship.AllyToPlayer] = 1,
+            [DamageRelationship.AllyToAlly] = 1,
+            [DamageRelationship.AllyToEnemy] = 1,
+            [DamageRelationship.EnemyToPlayer] = 1,
+            [DamageRelationship.EnemyToAlly] = 1,
+            [DamageRelationship.EnemyToEnemy] = 1,
+        };
+        
+        private readonly Dictionary<DamageRelationship, float> _balanceDamageMultipliers = new ()
+        {
+            [DamageRelationship.Unknown] = 1,
+            [DamageRelationship.PlayerToSelf] = 1,
+            [DamageRelationship.PlayerToAlly] = 1,
+            [DamageRelationship.PlayerToEnemy] = 1,
+            [DamageRelationship.AllyToPlayer] = 1,
+            [DamageRelationship.AllyToAlly] = 1,
+            [DamageRelationship.AllyToEnemy] = 1,
+            [DamageRelationship.EnemyToPlayer] = 1,
+            [DamageRelationship.EnemyToAlly] = 1,
+            [DamageRelationship.EnemyToEnemy] = 1,
+        };
+
+        public void SetGlobalHealthDamageMultiplier(DamageRelationship relationship, float value)
+        {
+            _healthDamageGlobalMultipliers[relationship] = value;
+        }
+
+        public float GetGlobalHealthDamageMultiplier(DamageRelationship relationship)
+        {
+            _healthDamageGlobalMultipliers.TryGetValue(relationship, out var value);
+            return value;
+        }
+        
+        public void SetGlobalBalanceDamageMultiplier(DamageRelationship relationship, float value)
+        {
+            _balanceDamageMultipliers[relationship] = value;
+        }
+        
+        public float GetGlobalBalanceDamageMultiplier(DamageRelationship relationship)
+        {
+            _healthDamageGlobalMultipliers.TryGetValue(relationship, out var value);
+            return value;
+        }
         
         public ActorDamageData GetActorData(int actorId)
         {
@@ -75,7 +141,35 @@ namespace JellyLib.DamageSystem
             var actorDamageData = GetActorData(actor.actorIndex);
             actorDamageData.onBeforeActorLateDamageCalculation.RemoveListener(script,methodName);
         }
+
+        /// <summary>
+        /// Calculates the damage the actor will take modified by the global damage multipliers.
+        /// Returns false if both balance damage and health damage were set to 0.
+        /// </summary>
+        /// <param name="targetActor"></param>
+        /// <param name="damageInfo"></param>
+        /// <returns></returns>
+        public bool CalculateGlobalDamage(Actor targetActor, ref DamageInfo damageInfo)
+        {
+            var relationship = DetermineDamageRelationship(damageInfo.sourceActor, targetActor);
+            //Plugin.Logger.LogInfo($"Actor relationship is: {relationship.ToString()}");
+            
+            var globalHealthDamageMultiplier = GetGlobalHealthDamageMultiplier(relationship);
+            var globalBalanceDamageMultiplier = GetGlobalBalanceDamageMultiplier(relationship);
+            
+            damageInfo.healthDamage *= globalHealthDamageMultiplier;
+            damageInfo.balanceDamage *= globalBalanceDamageMultiplier;
+
+            if (damageInfo.healthDamage == 0 || damageInfo.balanceDamage == 0)
+                return false;
+            return true;
+        }
         
+        /// <summary>
+        /// Calculates the damage the target actor will take. Takes into account any existing modifiers on the source actor and the target actor.
+        /// </summary>
+        /// <param name="targetActor">The target actor.</param>
+        /// <param name="damageInfo">The damage info.</param>
         public void CalculateDamage(Actor targetActor, ref DamageInfo damageInfo)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -236,6 +330,38 @@ namespace JellyLib.DamageSystem
             }
             _actorData.Clear();
         }
+
+        private DamageRelationship DetermineDamageRelationship(Actor sourceActor, Actor targetActor)
+        {
+            if (sourceActor == null)
+                return DamageRelationship.Unknown;
+            if (targetActor == null)
+                return DamageRelationship.Unknown;
+            
+            var playerTeam = GameManager.PlayerTeam();
+            var sourceActorTeam = sourceActor.team;
+            var targetActorTeam = targetActor.team;
+            var isSourcePlayer = !sourceActor.aiControlled;
+            var isPlayerAlly = sourceActorTeam == playerTeam;
+            
+            if (isSourcePlayer)
+            {
+                if (sourceActor == targetActor)
+                    return DamageRelationship.PlayerToSelf;
+                return targetActorTeam == playerTeam ? DamageRelationship.PlayerToAlly : DamageRelationship.PlayerToEnemy;
+            }
+
+            if (isPlayerAlly)
+            {
+                if (!targetActor.aiControlled)
+                    return DamageRelationship.AllyToPlayer;
+                return sourceActorTeam == targetActorTeam ? DamageRelationship.AllyToAlly : DamageRelationship.AllyToEnemy;
+            }
+
+            if (!targetActor.aiControlled)
+                return DamageRelationship.EnemyToPlayer;
+            return sourceActorTeam == targetActorTeam ? DamageRelationship.EnemyToEnemy : DamageRelationship.EnemyToAlly;
+        }
         
         /// <summary>
         /// A struct that holds a collection of damage modifiers
@@ -374,7 +500,7 @@ namespace JellyLib.DamageSystem
     [HarmonyPatch(typeof(Actor), nameof(Actor.Damage))]
     public class PatchActorDamage
     {
-        static bool Prefix(Actor __instance, ref DamageInfo info)
+        static bool Prefix(Actor __instance, ref DamageInfo info, ref bool __result)
         {
             if (__instance.isInvulnerable || __instance.dead)
                 return true;
@@ -387,11 +513,22 @@ namespace JellyLib.DamageSystem
                 return true;
             }
             
+            //Abort damage calculation if damage got zeroed out by global modifiers.
+            //Requires both balance and health damage to be 0.
+            var willDamage = DamageSystem.Instance.CalculateGlobalDamage(__instance, ref info);
+            if (!willDamage)
+            {
+                __result = false;
+                return false;
+            }
+            
             var actorData = DamageSystem.Instance.GetActorData(__instance.actorIndex);
             actorData.onBeforeActorDamageCalculation?.Invoke(__instance, info);
             if(info.sourceActor && !info.sourceActor.aiControlled)
                 EventsManager.events.onPlayerDealtDamageBeforeDamageCalculation?.Invoke(info, new HitInfo(__instance));
+            
             DamageSystem.Instance.CalculateDamage(__instance, ref info);
+            
             actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
             return true;
         }

@@ -129,6 +129,26 @@ namespace JellyLib.DamageSystem
             }
             DamageSystem.Instance.RemoveOnBeforeLateDamageCalculationEvent(script,actor._value, methodName);
         }
+
+        public static void SetGlobalHealthDamageMultiplier(DamageRelationship relationship, float value)
+        {
+            DamageSystem.Instance.SetGlobalHealthDamageMultiplier(relationship, value);
+        }
+        
+        public static void SetGlobalBalanceDamageMultiplier(DamageRelationship relationship, float value)
+        {
+            DamageSystem.Instance.SetGlobalBalanceDamageMultiplier(relationship, value);
+        }
+
+        public static float GetGlobalHealthDamageMultiplier(DamageRelationship relationship)
+        {
+            return DamageSystem.Instance.GetGlobalHealthDamageMultiplier(relationship);
+        }
+        
+        public static float GetGlobalBalanceDamageMultiplier(DamageRelationship relationship)
+        {
+            return DamageSystem.Instance.GetGlobalBalanceDamageMultiplier(relationship);
+        }
         
         [MoonSharpHidden]
         public object GetValue()
