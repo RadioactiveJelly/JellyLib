@@ -7,6 +7,7 @@ using Lua.Proxy;
 using Lua;
 using Steamworks;
 using HarmonyLib;
+using Lua.Wrapper;
 using UnityEngine;
 using UnityEngine.Windows.WebCam;
 

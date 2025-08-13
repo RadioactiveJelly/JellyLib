@@ -16,11 +16,12 @@ using JellyLib.GameModeUtils;
 using JellyLib.Steamworks;
 using JellyLib.WeaponUtils;
 using JellyLib.Extensions;
-using JellyLib.Utilities;
 using Lua;
 using Lua.Wrapper;
 using Ravenfield.SpecOps;
 using UnityEngine;
+using System.Diagnostics;
+using JellyLib.Utilities;
 
 
 namespace JellyLib;
@@ -51,7 +52,7 @@ public class Plugin : BaseUnityPlugin
             script.Globals["GameObjective"] = typeof(ObjectiveProxy);
             script.Globals["HealInfo"] = typeof(HealInfoProxy);
             script.Globals["JellyLib"] = typeof(JellyLibProxy);
-            script.Globals["ObjectPool"] = typeof(ObjectPoolProxy);
+            script.Globals["Stopwatch"] = typeof(StopwatchProxy);
             return true;
         }
     }
@@ -85,9 +86,9 @@ public class Plugin : BaseUnityPlugin
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, HealInfo v) => DynValue.FromObject(s, HealInfoProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(HealInfo), (DynValue v) => v.ToObject<HealInfoProxy>()._value);
             UserData.RegisterType(typeof(JellyLibProxy), InteropAccessMode.Default, null);
-            UserData.RegisterType(typeof(ObjectPoolProxy), InteropAccessMode.Default, null);
-            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, ObjectPool v) => DynValue.FromObject(s, ObjectPoolProxy.New(v)));
-            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(ObjectPool), (DynValue v) => v.ToObject<ObjectPoolProxy>()._value);
+            UserData.RegisterType(typeof(StopwatchProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, Stopwatch v) => DynValue.FromObject(s, StopwatchProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(Stopwatch), (DynValue v) => v.ToObject<StopwatchProxy>()._value);
             return true;
         }
     }
@@ -110,7 +111,7 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(ObjectiveProxy));
             proxyTypesList.Add(typeof(HealInfoProxy));
             proxyTypesList.Add(typeof(JellyLibProxy));
-            proxyTypesList.Add(typeof(ObjectPoolProxy));
+            proxyTypesList.Add(typeof(StopwatchProxy));
             __result = proxyTypesList.ToArray();
         }
     }
