@@ -32,7 +32,7 @@ public class Plugin : BaseUnityPlugin
     public static new ManualLogSource Logger;
     internal static string filePath = Paths.BepInExRootPath + "\\files\\";
     private static Harmony _harmonyInstance;
-    private const int EXPECTED_GAME_VERSION = 31;
+    private const int EXPECTED_GAME_VERSION = 32;
     
     [HarmonyPatch(typeof(Registrar), nameof(Registrar.ExposeTypes))]
     public class PatchExposeTypes
@@ -157,16 +157,10 @@ public class Plugin : BaseUnityPlugin
         if (!GameManager.IsInMainMenu())
             return;
 
-        GUILayout.BeginArea(new Rect(Screen.width - 260f, 10f, 250f, 200f), string.Empty);
-        GUILayout.BeginHorizontal();
-        GUILayout.FlexibleSpace();
         if(EXPECTED_GAME_VERSION != GameManager.instance.buildNumber)
-            GUILayout.Box($"<color=yellow>WARNING: JellyLib is not compatible with this version of Ravenfield. Expected {EXPECTED_GAME_VERSION}. Got {GameManager.instance.buildNumber}</color>");
+            DrawVersionWarning();
         else
-            GUILayout.Box($"JellyLib ({MyPluginInfo.PLUGIN_VERSION})");
-        GUILayout.FlexibleSpace();
-        GUILayout.EndHorizontal();
-        GUILayout.EndArea();
+            DrawPluginVersion();
         
         if (!WeaponUtils.WeaponUtils.DoneLoading)
             return;
@@ -180,6 +174,29 @@ public class Plugin : BaseUnityPlugin
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
         
+        
+        GUILayout.EndArea();
+    }
+
+    private static void DrawPluginVersion()
+    {
+        GUILayout.BeginArea(new Rect(Screen.width - 260f, 10f, 250f, 200f), string.Empty);
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.Box($"JellyLib ({MyPluginInfo.PLUGIN_VERSION})");
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        GUILayout.EndArea();
+    }
+
+    private static void DrawVersionWarning()
+    {
+        GUILayout.BeginArea(new Rect(Screen.width - 875f, 10f, 1040, 200f), string.Empty);
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.Box($"<color=yellow>WARNING: JellyLib is not compatible with this version of Ravenfield. Expected: EA{EXPECTED_GAME_VERSION}. Got: EA{GameManager.instance.buildNumber}.</color>");
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
         GUILayout.EndArea();
     }
 }
