@@ -27,6 +27,11 @@ namespace JellyLib.GameModeUtils
         {
             GameModeUtils.SpecOpsSpawnSequence();
         }
+        
+        public static float GetPlayerCharacterControllerHeight()
+        {
+            return GameModeUtils.GetPlayerCharacterControllerHeight();
+        }
 
         public static IList<SpecOpsObjective> GetSpecOpsObjectives()
         {

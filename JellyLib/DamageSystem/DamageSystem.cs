@@ -6,6 +6,7 @@ using UnityEngine;
 using System.Linq;
 using System.Diagnostics;
 using JellyLib.EventExtensions;
+using Lua.Proxy;
 using Lua.Wrapper;
 using Ravenfield.Trigger;
 using Debug = UnityEngine.Debug;

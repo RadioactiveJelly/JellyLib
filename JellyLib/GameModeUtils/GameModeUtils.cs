@@ -21,6 +21,14 @@ namespace JellyLib.GameModeUtils
             return specOpsMode.attackerSpawnPosition;
         }
 
+        static CharacterController _characterController;
+        public static float GetPlayerCharacterControllerHeight()
+        {
+            if (_characterController == null)
+                _characterController = FpsActorController.instance.GetComponent<CharacterController>();
+            return _characterController.height;
+        }
+
         public static void SpecOpsSpawnSequence()
         {
             if (!GameModeBase.activeGameMode)
@@ -62,6 +70,16 @@ namespace JellyLib.GameModeUtils
         }
 
         public static bool DefaultSpecOpsSpawnSequence { get; set; } = true;
+        
+        [HarmonyPatch(typeof(GameManager), nameof(GameManager.ReturnToMenu))]
+        public class PatchReturnToMenu
+        {
+            static bool Prefix(GameManager __instance)
+            {
+                _characterController = null;
+                return true;
+            }
+        }
     }
 
     [HarmonyPatch(typeof(SpecOpsMode), nameof(SpecOpsMode.PlayerAcceptedLoadoutFirstTime))]
@@ -72,5 +90,7 @@ namespace JellyLib.GameModeUtils
             return GameModeUtils.DefaultSpecOpsSpawnSequence;
         }
     }
+    
+    
 }
 
