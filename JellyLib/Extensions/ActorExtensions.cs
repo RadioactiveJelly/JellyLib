@@ -5,7 +5,10 @@ using JellyLib.DamageSystem;
 using JellyLib.EventExtensions;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Diagnostics;
 using JellyLib.Utilities;
+using Lua.Wrapper;
+using Ravenfield.Trigger;
 
 namespace JellyLib.Extensions
 {
@@ -108,6 +111,8 @@ namespace JellyLib.Extensions
         public static SilentSpawnToken SilentSpawnAt(this ActorProxy proxy, Vector3 position, Quaternion rotation, WeaponManager.LoadoutSet forcedLoadout = null)
         {
             var actor = proxy._value;
+            var stopwatch = Stopwatch.StartNew();
+            stopwatch.Start();
             ReflectionUtils.SetPrivateField(actor, "forceAnimatorNeverCull", !actor.aiControlled);
             rotation = Quaternion.Euler(rotation.eulerAngles with
             {
@@ -120,15 +125,13 @@ namespace JellyLib.Extensions
             actor.ragdoll.SetDrive(700f, 3f);
             actor.ragdoll.SetControl(true);
             actor.ragdoll.InstantAnimate();
-            actor.hasSpawnedAmmoReserve = false;
-            actor.hasHeroArmor = false;
-            actor.isInvulnerable = false;
+            
             actor.attackersIgnoreEngagementRules = false;
             actor.makesProximityMovementNoise = false;
             actor.visibilityDistanceModifier = 0.0f;
             actor.isScheduledToSpawn = false;
             actor.isInvisibleFollower = false;
-            actor.speedMultiplier = 1f;
+            
             actor.SetIdleType(Actor.IdleAnimation.Stand);
             ReflectionUtils.SetPrivateField(actor, "animatedSoldierHeightOffset", 0.0f);
             actor.immersedInWater = false;
@@ -154,34 +157,33 @@ namespace JellyLib.Extensions
               RavenscriptManager.events.onActorSelectedLoadout.Invoke(actor, loadout, ((AiActorController) actor.controller).loadoutStrategy);
             
             ReflectionUtils.CallPrivateMethod(actor, "SpawnLoadoutWeapons", loadout);
+            foreach (var weapon in actor.weapons)
+            {
+                weapon.gameObject.SetActive(false);
+            }
             
             if (actor.seat != null)
             { 
                 actor.seat.OccupantLeft();
-                actor.seat = (Seat) null;
+                actor.seat = null;
             }
             actor.CutParachutes();
-            actor.ladder = (Ladder) null;
-            actor.moving = false;
-            var actorIk = ReflectionUtils.GetPrivateField<ActorIk>(actor, "actorIk");
+            var actorIk = ReflectionUtils.GetPrivateField<ActorIk>(actor, "ik");
             actorIk.turnBody = true;
             actorIk.weight = 1f;
             actorIk.SetHandIkEnabled(false, false);
             actor.animator.enabled = true;
             actor.animator.SetLayerWeight(2, 0.0f);
             actor.animator.SetTrigger(Actor.ANIM_PAR_RESET);
-            actor.balance = actor.maxBalance;
-            actor.health = actor.maxHealth;
-            actor.dead = false;
+            
             actor.fallenOver = false;
             actor.getupAction.Stop();
             actor.needsResupply = false;
             ReflectionUtils.SetPrivateField(actor, "aimAnimationLayerWeight", 1f);
-            actor.canDeployParachute = true;
-            actor.parachuteDeployed = false;
+            
             var parachuteDeployAction = ReflectionUtils.GetPrivateField<TimedAction>(actor, "parachuteDeployAction");
             parachuteDeployAction.Stop();
-            actor.controller.EnableMovement();
+           
             ReflectionUtils.SetPrivateField(actor, "fallStartHeight", position.y);
             var parachuteDeployStunAction = ReflectionUtils.GetPrivateField<TimedAction>(actor, "parachuteDeployStunAction");
             parachuteDeployStunAction.Stop();
@@ -198,20 +200,9 @@ namespace JellyLib.Extensions
                 Rotation = rotation,
             };
 
+            stopwatch.Stop();
+            Plugin.Logger.LogInfo(stopwatch.Log("ActorExtensions.SilentSpawn"));
             return handle;
-        }
-
-        private static void SetActorAlive(SilentSpawnToken token)
-        {
-            var actor = token.Actor;
-            actor.Show();
-            actor.Unfreeze();
-            actor.EnableHitboxColliders();
-            actor.controller.EnableInput();
-            actor.controller.SpawnAt(token.Position, token.Rotation);
-            ActorManager.SetAlive(actor);
-            ReflectionUtils.CallPrivateMethod(actor, "UpdateCachedValues");
-            RavenscriptManager.events.onActorSpawn.Invoke(actor);
         }
     }
 
@@ -224,9 +215,23 @@ namespace JellyLib.Extensions
         public void CompleteSpawn()
         {
             var actor = Actor;
+            actor.balance = actor.maxBalance;
+            actor.health = actor.maxHealth;
+            actor.hasSpawnedAmmoReserve = false;
+            actor.hasHeroArmor = false;
+            actor.isInvulnerable = false;
+            actor.dead = false;
+            actor.speedMultiplier = 1f;
+            actor.canDeployParachute = true;
+            actor.parachuteDeployed = false;
+            actor.isScheduledToSpawn = false;
+            actor.ladder = null;
+            actor.moving = false;
+            actor.activeWeapon.gameObject.SetActive(true);
             actor.Show();
             actor.Unfreeze();
             actor.EnableHitboxColliders();
+            actor.controller.EnableMovement();
             actor.controller.EnableInput();
             actor.controller.SpawnAt(Position, Rotation);
             ActorManager.SetAlive(actor);

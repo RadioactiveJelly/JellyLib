@@ -7,6 +7,25 @@ using MoonSharp.Interpreter;
 
 namespace JellyLib.Utilities
 {
+    public static class StopwatchExtensions
+    {
+        public static string Log(this Stopwatch stopwatch, string context)
+        {
+            const string messageFormat = "{0}: Operation took {1}{2}ms{3}";
+
+            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+            var prefix = elapsedMilliseconds switch
+            {
+                >= 2000 => "<color=red>",
+                >= 1000 => "<color=orange>",
+                >= 500 => "<color=yellow>",
+                _ => "<color=green>"
+            };
+
+            return string.Format(messageFormat, context, prefix, elapsedMilliseconds, "</color>");
+        }
+    }
+    
     [Proxy(typeof(Stopwatch))]
     public class StopwatchProxy
     {
@@ -45,19 +64,7 @@ namespace JellyLib.Utilities
 
         public void Log(string context)
         {
-            const string messageFormat = "{0}: Operation took {1}{2}ms{3}";
-
-            var elapsedMilliseconds = _value.ElapsedMilliseconds;
-            var prefix = elapsedMilliseconds switch
-            {
-                >= 2000 => "<color=red>",
-                >= 1000 => "<color=orange>",
-                >= 500 => "<color=yellow>",
-                _ => "<color=green>"
-            };
-
-            var message = string.Format(messageFormat, context, prefix, elapsedMilliseconds, "</color>");
-            Lua.ScriptConsole.instance.LogInfo(message);
+            Lua.ScriptConsole.instance.LogInfo(_value.Log(context));
         }
         
         [MoonSharpHidden]
