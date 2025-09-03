@@ -159,6 +159,9 @@ namespace JellyLib.Extensions
             ReflectionUtils.CallPrivateMethod(actor, "SpawnLoadoutWeapons", loadout);
             foreach (var weapon in actor.weapons)
             {
+                if (weapon == null)
+                    continue;
+                
                 weapon.gameObject.SetActive(false);
             }
             
@@ -199,7 +202,7 @@ namespace JellyLib.Extensions
                 Position = position,
                 Rotation = rotation,
             };
-
+            
             stopwatch.Stop();
             Plugin.Logger.LogInfo(stopwatch.Log("ActorExtensions.SilentSpawn"));
             return handle;
@@ -227,13 +230,14 @@ namespace JellyLib.Extensions
             actor.isScheduledToSpawn = false;
             actor.ladder = null;
             actor.moving = false;
-            actor.activeWeapon.gameObject.SetActive(true);
             actor.Show();
             actor.Unfreeze();
             actor.EnableHitboxColliders();
+            actor.controller.SpawnAt(Position, Rotation);
             actor.controller.EnableMovement();
             actor.controller.EnableInput();
-            actor.controller.SpawnAt(Position, Rotation);
+            ReflectionUtils.CallPrivateMethod(actor, "SwitchToFirstAvailableWeapon");
+            
             ActorManager.SetAlive(actor);
             ReflectionUtils.CallPrivateMethod(actor, "UpdateCachedValues");
             RavenscriptManager.events.onActorSpawn.Invoke(actor);

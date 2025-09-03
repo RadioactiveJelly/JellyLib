@@ -40,6 +40,18 @@ namespace JellyLib.WeaponUtils
             set => _value.maxSpareAmmo = value;
         }
 
+        public int? maxAmmoPerReload
+        {
+            get => _value.maxAmmoPerReload;
+            set => _value.maxAmmoPerReload = value;
+        }
+
+        public int? resupplyNumber
+        {
+            get => _value.resupplyNumber;
+            set => _value.resupplyNumber = value;
+        }
+
         public bool autoAdjustAllowedReloads
         {
             get => _value.autoAdjustAllowedReloads;
@@ -86,6 +98,48 @@ namespace JellyLib.WeaponUtils
         {
             get => _value.snapFrequency;
             set => _value.snapFrequency = value;
+        }
+        
+        public float? followupSpreadGain
+        {
+            get => _value.followupSpreadGain;
+            set => _value.followupSpreadGain = value;
+        }
+        
+        public float? followupMaxSpreadHip
+        {
+            get => _value.followupMaxSpreadHip;
+            set => _value.followupMaxSpreadHip = value;
+        }
+        
+        public float? followupMaxSpreadAim
+        {
+            get => _value.followupMaxSpreadAim;
+            set => _value.followupMaxSpreadAim = value;
+        }
+        
+        public float? followupSpreadStayTime
+        {
+            get => _value.followupSpreadStayTime;
+            set => _value.followupSpreadStayTime = value;
+        }
+        
+        public float? followupSpreadDissipateTime
+        {
+            get => _value.followupSpreadDissipateTime;
+            set => _value.followupSpreadDissipateTime = value;
+        }
+        
+        public float? spreadProneMultiplier
+        {
+            get => _value.spreadProneMultiplier;
+            set => _value.spreadProneMultiplier = value;
+        }
+        
+        public float? followupSpreadProneMultiplier
+        {
+            get => _value.followupSpreadProneMultiplier;
+            set => _value.followupSpreadProneMultiplier = value;
         }
         
         public float? cooldown

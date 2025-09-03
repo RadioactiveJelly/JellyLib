@@ -192,11 +192,9 @@ namespace JellyLib.WeaponUtils
                 __result.configuration.spareAmmo = weaponOverride.maxSpareAmmo.Value;
                 __result.spareAmmo = __result.configuration.spareAmmo;
             }
-
-            if (weaponOverride.maxAmmoPerReload.HasValue)
-            {
-                __result.configuration.maxAmmoPerReload = weaponOverride.maxAmmoPerReload.Value;
-            }
+            
+            __result.configuration.resupplyNumber = weaponOverride.resupplyNumber ?? __result.configuration.resupplyNumber;
+            __result.configuration.maxAmmoPerReload = weaponOverride.maxAmmoPerReload ?? __result.configuration.maxAmmoPerReload;
 
             if (weaponOverride.autoAdjustAllowedReloads)
             {
@@ -207,24 +205,22 @@ namespace JellyLib.WeaponUtils
                 }
                 __result.configuration.allowedReloads = allowedReloads.ToArray();
             }
-
-            if (weaponOverride.kickback.HasValue)
-                __result.configuration.kickback = weaponOverride.kickback.Value;
             
-            if (weaponOverride.randomKick.HasValue)
-                __result.configuration.kickback = weaponOverride.randomKick.Value;
+            __result.configuration.kickback = weaponOverride.kickback ?? __result.configuration.kickback;
+            __result.configuration.randomKick = weaponOverride.randomKick ?? __result.configuration.randomKick;
+            __result.configuration.snapMagnitude = weaponOverride.snapMagnitude ?? __result.configuration.snapMagnitude;
+            __result.configuration.snapDuration = weaponOverride.snapDuration ?? __result.configuration.snapDuration;
+            __result.configuration.snapFrequency = weaponOverride.snapFrequency ?? __result.configuration.snapFrequency;
             
-            if (weaponOverride.snapMagnitude.HasValue)
-                __result.configuration.kickback = weaponOverride.snapMagnitude.Value;
+            __result.configuration.followupSpreadGain = weaponOverride.followupSpreadGain ?? __result.configuration.followupSpreadGain;
+            __result.configuration.followupMaxSpreadHip = weaponOverride.followupMaxSpreadHip ?? __result.configuration.followupMaxSpreadHip;
+            __result.configuration.followupMaxSpreadAim = weaponOverride.followupMaxSpreadAim ?? __result.configuration.followupMaxSpreadAim;
+            __result.configuration.followupSpreadStayTime = weaponOverride.followupSpreadStayTime ?? __result.configuration.followupSpreadStayTime;
+            __result.configuration.followupSpreadDissipateTime = weaponOverride.followupSpreadDissipateTime ?? __result.configuration.followupSpreadDissipateTime;
+            __result.configuration.spreadProneMultiplier = weaponOverride.spreadProneMultiplier ?? __result.configuration.spreadProneMultiplier;
+            __result.configuration.followupSpreadProneMultiplier = weaponOverride.followupSpreadProneMultiplier ?? __result.configuration.followupSpreadProneMultiplier;
             
-            if (weaponOverride.snapDuration.HasValue)
-                __result.configuration.kickback = weaponOverride.snapDuration.Value;
-            
-            if (weaponOverride.snapFrequency.HasValue)
-                __result.configuration.kickback = weaponOverride.snapFrequency.Value;
-            
-            if(weaponOverride.cooldown.HasValue)
-                __result.configuration.cooldown = weaponOverride.cooldown.Value;
+            __result.configuration.cooldown = weaponOverride.cooldown ?? __result.configuration.cooldown;
         }
     }
     
