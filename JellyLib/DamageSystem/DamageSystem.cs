@@ -161,9 +161,7 @@ namespace JellyLib.DamageSystem
             damageInfo.healthDamage *= globalHealthDamageMultiplier;
             damageInfo.balanceDamage *= globalBalanceDamageMultiplier;
 
-            if (damageInfo.healthDamage == 0 || damageInfo.balanceDamage == 0)
-                return false;
-            return true;
+            return damageInfo.healthDamage != 0 || damageInfo.balanceDamage != 0;
         }
         
         /// <summary>
