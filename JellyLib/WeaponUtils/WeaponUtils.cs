@@ -77,7 +77,7 @@ namespace JellyLib.WeaponUtils
                 //Plugin.Logger.LogInfo($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Registered: {weaponEntry.name} to group {modId}");
             }
             stopwatch.Stop();
-            Plugin.Logger.LogInfo($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Operation took {stopwatch.ElapsedMilliseconds}ms.");
+            Plugin.Logger.LogInfo($"[{nameof(WeaponUtils)}.{nameof(SortWeaponEntriesByModId)}] Processed {WeaponManager.instance.allWeapons.Count} weapons. Operation took {stopwatch.ElapsedMilliseconds}ms.");
             _doneLoading = true;
         }
 
@@ -124,6 +124,14 @@ namespace JellyLib.WeaponUtils
                     dump += $"----Snap Duration: {weapon.configuration.snapDuration}\n";
                     dump += $"----Snap Frequency: {weapon.configuration.snapFrequency}\n";
                     dump += $"----Cooldown: {weapon.configuration.cooldown}\n";
+                    dump += $"----Spread: {weapon.configuration.spread}\n";
+                    dump += $"----Follow Up Spread Gain: {weapon.configuration.followupSpreadGain}\n";
+                    dump += $"----Follow Up Max Spread Hip: {weapon.configuration.followupMaxSpreadHip}\n";
+                    dump += $"----Follow Up Max Spread Aim: {weapon.configuration.followupMaxSpreadAim}\n";
+                    dump += $"----Followup Spread Stay Time: {weapon.configuration.followupSpreadStayTime}\n";
+                    dump += $"----Followup Spread Dissipate Time: {weapon.configuration.followupSpreadDissipateTime}\n";
+                    dump += $"----Spread Prone Multiplier: {weapon.configuration.spreadProneMultiplier}\n";
+                    dump += $"----Follow Up Spread Prone Multiplier: {weapon.configuration.followupSpreadProneMultiplier}\n";
                     var projectilePrefab = weapon.configuration.projectilePrefab;
                     if (!projectilePrefab)
                         continue;
@@ -212,6 +220,7 @@ namespace JellyLib.WeaponUtils
             __result.configuration.snapDuration = weaponOverride.snapDuration ?? __result.configuration.snapDuration;
             __result.configuration.snapFrequency = weaponOverride.snapFrequency ?? __result.configuration.snapFrequency;
             
+            __result.configuration.spread = weaponOverride.spread ?? __result.configuration.spread;
             __result.configuration.followupSpreadGain = weaponOverride.followupSpreadGain ?? __result.configuration.followupSpreadGain;
             __result.configuration.followupMaxSpreadHip = weaponOverride.followupMaxSpreadHip ?? __result.configuration.followupMaxSpreadHip;
             __result.configuration.followupMaxSpreadAim = weaponOverride.followupMaxSpreadAim ?? __result.configuration.followupMaxSpreadAim;

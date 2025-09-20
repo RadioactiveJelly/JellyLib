@@ -381,8 +381,10 @@ namespace JellyLib.DamageSystem
         /// <summary>
         /// Damage data associated to an actor.
         /// </summary>
-        public class ActorDamageData
+        public class ActorDamageData(bool canDie)
         {
+            public bool CanDie { get; set; } = canDie;
+
             public IReadOnlyDictionary<DamageInfo.DamageSourceType, DamageData> IncomingDamageData =
                 new Dictionary<DamageInfo.DamageSourceType, DamageData>()
                 {
@@ -414,6 +416,10 @@ namespace JellyLib.DamageSystem
                     { DamageInfo.DamageSourceType.Scripted , new DamageData() },
                     { DamageInfo.DamageSourceType.ProjectileShatter , new DamageData() },
                 };
+
+            public ActorDamageData() : this(true)
+            {
+            }
 
             public void AddIncomingDamageModifier(DamageInfo.DamageSourceType damageType, string modifierName, DamageModifier modifier)
             {

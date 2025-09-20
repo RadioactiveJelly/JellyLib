@@ -103,6 +103,19 @@ namespace JellyLib.Extensions
             EventsManager.events.onAfterActorHealed?.Invoke(healInfo, actualAmountHealed);
         }
 
+        public static void SetCanDie(this ActorProxy actorProxy, bool val)
+        {
+            var actor = actorProxy._value;
+            if(actor == null)
+                return;
+
+            var actorData = DamageSystem.DamageSystem.Instance.GetActorData(actor.actorIndex);
+            if (actorData == null)
+                return;
+
+            actorData.CanDie = val;
+        }
+
         public static SilentSpawnToken SilentSpawnAt(this ActorProxy actorProxy, Vector3 position)
         {
             return actorProxy.SilentSpawnAt(position, Quaternion.identity);
