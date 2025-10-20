@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using Lua;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace JellyLib.FileManager.Wrapper;
 
@@ -12,6 +14,12 @@ public static class WFileManager
         File.WriteAllText(finalPath, content);
     }
 
+    public static string FormatJson(string content)
+    {
+        var formattedJson = JToken.Parse(content);
+        return formattedJson.ToString(Formatting.Indented);
+    }
+    
     public static string ReadAllText(ScriptedBehaviour script,string path)
     {
         var modId = GetModId(script);

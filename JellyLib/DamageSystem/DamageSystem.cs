@@ -172,15 +172,15 @@ namespace JellyLib.DamageSystem
         public void CalculateDamage(Actor targetActor, ref DamageInfo damageInfo)
         {
             var stopwatch = Stopwatch.StartNew();
+            var actorData = _actorData[targetActor.actorIndex];
             
             //Early Phase
             var earlyResult = CalculateDamagePhase(targetActor, damageInfo, DamageCalculationPhase.Early);
             damageInfo.healthDamage = earlyResult.Item1;
             damageInfo.balanceDamage = earlyResult.Item2;
-            
-            if(_actorData.TryGetValue(targetActor.actorIndex, out var data))
-                data.onBeforeActorLateDamageCalculation?.Invoke(targetActor,damageInfo);
-            
+
+            actorData?.onBeforeActorLateDamageCalculation?.Invoke(targetActor,damageInfo);
+
             if(damageInfo.sourceActor && !damageInfo.sourceActor.aiControlled)
                 EventsManager.events.onPlayerDealtDamageLateDamageCalculation?.Invoke(damageInfo, new HitInfo(targetActor));
             
@@ -381,8 +381,10 @@ namespace JellyLib.DamageSystem
         /// <summary>
         /// Damage data associated to an actor.
         /// </summary>
-        public class ActorDamageData
+        public class ActorDamageData(bool immortalThisFrame)
         {
+            public bool ImmortalThisFrame { get; set; } = immortalThisFrame;
+
             public IReadOnlyDictionary<DamageInfo.DamageSourceType, DamageData> IncomingDamageData =
                 new Dictionary<DamageInfo.DamageSourceType, DamageData>()
                 {
@@ -414,6 +416,10 @@ namespace JellyLib.DamageSystem
                     { DamageInfo.DamageSourceType.Scripted , new DamageData() },
                     { DamageInfo.DamageSourceType.ProjectileShatter , new DamageData() },
                 };
+
+            public ActorDamageData() : this(false)
+            {
+            }
 
             public void AddIncomingDamageModifier(DamageInfo.DamageSourceType damageType, string modifierName, DamageModifier modifier)
             {
@@ -529,6 +535,13 @@ namespace JellyLib.DamageSystem
             DamageSystem.Instance.CalculateDamage(__instance, ref info);
             
             actorData.onAfterActorDamageCalculation?.Invoke(__instance, info);
+
+            if (actorData is not { ImmortalThisFrame: true }) return true;
+            
+            info.healthDamage = Mathf.Clamp(info.healthDamage, 0, __instance.health - 1);
+            info.balanceDamage = 0;
+            actorData.ImmortalThisFrame = false;
+
             return true;
         }
 

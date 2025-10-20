@@ -19,6 +19,11 @@ public class FileManagerProxy : IProxy
         WFileManager.WriteAllText(scriptProxy._value, path, content);
     }
 
+    public static string FormatJson(string content)
+    {
+        return WFileManager.FormatJson(content);
+    }
+
     public static string ReadAllText(ScriptedBehaviourProxy scriptProxy, string path)
     {
         return scriptProxy._value == null ? string.Empty : WFileManager.ReadAllText(scriptProxy._value, path);

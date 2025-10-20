@@ -20,6 +20,7 @@
         public float? snapFrequency;
         
         //Spread
+        public float? spread;
         public float? followupSpreadGain;
         public float? followupMaxSpreadHip;
         public float? followupMaxSpreadAim;

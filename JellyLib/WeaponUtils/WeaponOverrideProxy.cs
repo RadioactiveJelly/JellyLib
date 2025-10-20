@@ -100,6 +100,12 @@ namespace JellyLib.WeaponUtils
             set => _value.snapFrequency = value;
         }
         
+        public float? spread
+        {
+            get => _value.spread;
+            set => _value.spread = value;
+        }
+        
         public float? followupSpreadGain
         {
             get => _value.followupSpreadGain;

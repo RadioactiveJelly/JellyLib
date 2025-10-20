@@ -103,6 +103,24 @@ namespace JellyLib.Extensions
             EventsManager.events.onAfterActorHealed?.Invoke(healInfo, actualAmountHealed);
         }
 
+        /// <summary>
+        /// Sets an actor as immortal for the next frame of damage calculation.
+        /// An immortal actor still takes damage but will not die.
+        /// </summary>
+        /// <param name="actorProxy"></param>
+        public static void SetImmortalThisFrame(this ActorProxy actorProxy)
+        {
+            var actor = actorProxy._value;
+            if(actor == null)
+                return;
+
+            var actorData = DamageSystem.DamageSystem.Instance.GetActorData(actor.actorIndex);
+            if (actorData == null)
+                return;
+
+            actorData.ImmortalThisFrame = true;
+        }
+
         public static SilentSpawnToken SilentSpawnAt(this ActorProxy actorProxy, Vector3 position)
         {
             return actorProxy.SilentSpawnAt(position, Quaternion.identity);
