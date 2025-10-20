@@ -103,7 +103,12 @@ namespace JellyLib.Extensions
             EventsManager.events.onAfterActorHealed?.Invoke(healInfo, actualAmountHealed);
         }
 
-        public static void SetCanDie(this ActorProxy actorProxy, bool val)
+        /// <summary>
+        /// Sets an actor as immortal for the next frame of damage calculation.
+        /// An immortal actor still takes damage but will not die.
+        /// </summary>
+        /// <param name="actorProxy"></param>
+        public static void SetImmortalThisFrame(this ActorProxy actorProxy)
         {
             var actor = actorProxy._value;
             if(actor == null)
@@ -113,7 +118,7 @@ namespace JellyLib.Extensions
             if (actorData == null)
                 return;
 
-            actorData.CanDie = val;
+            actorData.ImmortalThisFrame = true;
         }
 
         public static SilentSpawnToken SilentSpawnAt(this ActorProxy actorProxy, Vector3 position)
