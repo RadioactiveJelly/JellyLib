@@ -32,7 +32,7 @@ public class Plugin : BaseUnityPlugin
     public static new ManualLogSource Logger;
     internal static string filePath = Paths.BepInExRootPath + "\\files\\";
     private static Harmony _harmonyInstance;
-    private const int EXPECTED_GAME_VERSION = 32;
+    private const int EXPECTED_GAME_VERSION = 33;
     
     [HarmonyPatch(typeof(Registrar), nameof(Registrar.ExposeTypes))]
     public class PatchExposeTypes
