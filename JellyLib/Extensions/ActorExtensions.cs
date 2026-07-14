@@ -254,7 +254,7 @@ namespace JellyLib.Extensions
             actor.controller.SpawnAt(Position, Rotation);
             actor.controller.EnableMovement();
             actor.controller.EnableInput();
-            ReflectionUtils.CallPrivateMethod(actor, "SwitchToFirstAvailableWeapon");
+            actor.SwitchToFirstAvailableWeapon();
             
             ActorManager.SetAlive(actor);
             ReflectionUtils.CallPrivateMethod(actor, "UpdateCachedValues");
