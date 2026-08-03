@@ -74,6 +74,26 @@ namespace JellyLib.WeaponUtils
             WeaponUtils.OverrideManager.RemoveWeaponOverride(weaponEntryProxy._value);
         }
 
+        public static void AddWeaponInstanceOverride(WeaponProxy weaponProxy, WeaponOverrideProxy weaponOverrideProxy)
+        {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon entry provided!");
+            }
+            
+            WeaponUtils.OverrideManager.AddWeaponInstanceOverride(weaponProxy._value, weaponOverrideProxy._value);
+        }
+
+        public static void RemoveWeaponInstanceOverride(WeaponProxy weaponProxy)
+        {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon entry provided!");
+            }
+            
+            WeaponUtils.OverrideManager.RemoveWeaponInstanceOverride(weaponProxy._value);
+        }
+
         public static WeaponManager.WeaponEntry GetWeaponEntry(string weaponEntryName, ulong modId)
         {
             var weaponEntry = WeaponUtils.GetWeaponEntry(weaponEntryName, modId);

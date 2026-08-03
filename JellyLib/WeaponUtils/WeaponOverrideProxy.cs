@@ -153,6 +153,18 @@ namespace JellyLib.WeaponUtils
             get => _value.cooldown;
             set => _value.cooldown = value;
         }
+
+        public int? explosionDamage
+        {
+            get => _value.explosionDamage;
+            set => _value.explosionDamage = value;
+        }
+
+        public int? explosionBalanceDamage
+        {
+            get => _value.explosionBalanceDamage;
+            set => _value.explosionBalanceDamage = value;
+        }
         
         [MoonSharpUserDataMetamethod("__call")]
         public static WeaponOverrideProxy Call(DynValue _)

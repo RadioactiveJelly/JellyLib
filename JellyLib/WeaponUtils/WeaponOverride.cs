@@ -11,6 +11,8 @@
         //Damage
         public int? damage;
         public int? balanceDamage;
+        public int? explosionDamage;
+        public int? explosionBalanceDamage;
         
         //Recoil
         public float? kickback;
