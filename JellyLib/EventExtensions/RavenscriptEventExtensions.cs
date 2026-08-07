@@ -7,6 +7,7 @@ using Lua;
 using UnityEngine;
 using HarmonyLib;
 using JellyLib.DamageSystem;
+using JellyLib.Utilities;
 using Lua.Proxy;
 using MoonSharp.Interpreter;
 
@@ -189,13 +190,41 @@ namespace JellyLib.EventExtensions
         }
     }
 
-    public struct HealInfo(Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon, WeaponManager.WeaponEntry sourceWeaponEntry)
+    public struct HealInfo
     {
-        public Actor targetActor = targetActor;
-        public Actor sourceActor = sourceActor;
-        public float amountHealed = amountHealed;
-        public Weapon sourceWeapon = sourceWeapon;
-        public WeaponManager.WeaponEntry sourceWeaponEntry = sourceWeaponEntry;
+        public Actor targetActor;
+        public Actor sourceActor;
+        public float amountHealed;
+        public Weapon sourceWeapon;
+        public WeaponManager.WeaponEntry sourceWeaponEntry;
+
+        public CustomData customData
+        {
+            get => _customData;
+            set
+            {
+                _customData = value;
+                _customData?.SetImmutable();
+            }
+        }
+        
+        private CustomData _customData;
+        
+        public HealInfo(
+            Actor targetActor,
+            Actor sourceActor,
+            float amountHealed,
+            Weapon sourceWeapon,
+            WeaponManager.WeaponEntry sourceWeaponEntry,
+            CustomData customData = null)
+        {
+            this.targetActor = targetActor;
+            this.sourceActor = sourceActor;
+            this.amountHealed = amountHealed;
+            this.sourceWeapon = sourceWeapon;
+            this.sourceWeaponEntry = sourceWeaponEntry;
+            this.customData = customData;
+        }
         
         public static HealInfo Default => new (null, null, 0, null, null);
         
@@ -222,9 +251,9 @@ namespace JellyLib.EventExtensions
         }
 
         public HealInfoProxy(Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon = null,
-            WeaponManager.WeaponEntry sourceWeaponEntry = null)
+            WeaponManager.WeaponEntry sourceWeaponEntry = null, CustomData customData = null)
         {
-            _value = new HealInfo(targetActor, sourceActor, amountHealed, sourceWeapon, sourceWeaponEntry);
+            _value = new HealInfo(targetActor, sourceActor, amountHealed, sourceWeapon, sourceWeaponEntry, customData);
         }
 
         public HealInfoProxy(HealInfoProxy source)
@@ -266,6 +295,12 @@ namespace JellyLib.EventExtensions
             set => _value.sourceWeaponEntry = value;
         }
 
+        public CustomData customData
+        {
+            get => _value.customData;
+            set => _value.customData = value;
+        }
+
         public object GetValue()
         {
             return _value;
@@ -278,9 +313,9 @@ namespace JellyLib.EventExtensions
         }
         
         [MoonSharpUserDataMetamethod("__call")]
-        public static HealInfoProxy Call(DynValue _,Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon, WeaponManager.WeaponEntry sourceWeaponEntry)
+        public static HealInfoProxy Call(DynValue _,Actor targetActor, Actor sourceActor, float amountHealed, Weapon sourceWeapon, WeaponManager.WeaponEntry sourceWeaponEntry, CustomData customData)
         {
-            return new HealInfoProxy(targetActor,sourceActor,amountHealed,sourceWeapon,sourceWeaponEntry);
+            return new HealInfoProxy(targetActor,sourceActor,amountHealed,sourceWeapon,sourceWeaponEntry, customData);
         }
     }
 }

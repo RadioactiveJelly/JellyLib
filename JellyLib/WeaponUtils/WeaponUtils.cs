@@ -31,6 +31,9 @@ namespace JellyLib.WeaponUtils
         private static WeaponOverrideManager _overrideManager; 
         public static WeaponOverrideManager OverrideManager => _overrideManager ??= new WeaponOverrideManager();
 
+        private static WeaponCustomDataManager _customDataManager; 
+        public static WeaponCustomDataManager CustomDataManager => _customDataManager ??= new WeaponCustomDataManager();
+
         private static Dictionary<ulong, Dictionary<string, WeaponManager.WeaponEntry>> _weaponsByModId;
         private static Dictionary<ulong, string> _modNamesById = new();
         private static Dictionary<WeaponManager.WeaponEntry, Projectile.Configuration> _defaultProjectileConfigs = new();
@@ -123,6 +126,60 @@ namespace JellyLib.WeaponUtils
             return !weaponSet.TryGetValue(trimmedString, out var weaponEntry) ? null : weaponEntry;
         }
 
+        /// <summary>
+        /// Returns the weapons projectile damage. If an override exists for the weapon, will use that value instead.
+        /// </summary>
+        /// <param name="weapon"></param>
+        /// <returns></returns>
+        public static float GetWeaponDamage(Weapon weapon)
+        {
+            if (weapon == null)
+                return 0;
+
+            var projectilePrefab = weapon.configuration.projectilePrefab;
+
+            if (projectilePrefab == null)
+                return 0;
+            
+            var projectile = projectilePrefab.GetComponent<Projectile>();
+            if (projectile == null)
+                return 0;
+
+            _overrideManager.GetWeaponOverride(weapon.weaponEntry, out var weaponOverride);
+
+            return weaponOverride.damage ?? projectile.configuration.damage;
+        }
+
+        /// <summary>
+        /// Returns the weapons explosion damage. If an override exists for the weapon, will use that value instead.
+        /// </summary>
+        /// <param name="weapon"></param>
+        /// <returns></returns>
+        public static float GetWeaponExplosionDamage(Weapon weapon)
+        {
+            if (weapon == null)
+                return 0;
+
+            var projectilePrefab = weapon.configuration.projectilePrefab;
+
+            if (projectilePrefab == null)
+                return 0;
+            
+            var projectile = projectilePrefab.GetComponent<Projectile>();
+            if (projectile == null)
+                return 0;
+
+            if (_overrideManager.GetWeaponOverride(weapon.weaponEntry, out var weaponOverride) && weaponOverride.explosionDamage.HasValue)
+                return weaponOverride.explosionDamage.Value;
+
+            return projectile switch
+            {
+                ExplodingProjectile explodingProjectile => explodingProjectile.explosionConfiguration.damage,
+                GrenadeProjectile grenadeProjectile => grenadeProjectile.explosionConfiguration.damage,
+                _ => 0
+            };
+        }
+
         public static bool TryGetCachedProjectileConfig(WeaponManager.WeaponEntry weaponEntry, out Projectile.Configuration configuration)
         {
             if (weaponEntry != null) return _defaultProjectileConfigs.TryGetValue(weaponEntry, out configuration);
@@ -197,143 +254,6 @@ namespace JellyLib.WeaponUtils
             
         }
     }
-
-    public class WeaponOverrideManager
-    {
-        /// <summary>
-        /// Dictionary containing overrides applied to all instances of a weapon entry.
-        /// </summary>
-        private readonly Dictionary<WeaponManager.WeaponEntry, WeaponOverride> _weaponOverrides = new();
-        
-        /// <summary>
-        /// Dictionary containing overrides applied to one instance of a weapon. Will take priority over any global overrides.
-        /// </summary>
-        private readonly Dictionary<Weapon, WeaponOverride> _instanceOverrides = new();
-        
-        /// <summary>
-        /// Dictionary containing overrides for an instance of a projectile. Overrides are removed when a projectile is pooled.
-        /// </summary>
-        private readonly Dictionary<Projectile, ProjectileOverride> _projectileOverrides = new();
-
-        public void Clear()
-        {
-            _weaponOverrides.Clear();
-            _instanceOverrides.Clear();
-        }
-
-        public void AddWeaponOverride(WeaponManager.WeaponEntry weaponEntry, WeaponOverride weaponOverride)
-        {
-            var modId = weaponEntry.sourceMod.workshopItemId.m_PublishedFileId;
-            _weaponOverrides[weaponEntry] = weaponOverride;
-            Plugin.Logger.LogInfo($"Registered override for {weaponEntry.name} (mod ID: {modId})");
-        }
-
-        public void RemoveWeaponOverride(WeaponManager.WeaponEntry weaponEntry)
-        {
-            var modId = weaponEntry.sourceMod.workshopItemId.m_PublishedFileId;
-            _weaponOverrides.Remove(weaponEntry);
-            Plugin.Logger.LogInfo($"Removed override for {weaponEntry.name} (mod ID: {modId})");
-        }
-
-        public void AddWeaponInstanceOverride(Weapon weaponInstance, WeaponOverride weaponOverride)
-        {
-            _instanceOverrides[weaponInstance] = weaponOverride;
-            ApplyOverrides(weaponInstance);
-        }
-
-        public void RemoveWeaponInstanceOverride(Weapon weaponInstance)
-        {
-            _instanceOverrides.Remove(weaponInstance);
-            ApplyOverrides(weaponInstance);
-        }
-
-        public bool GetWeaponOverride(WeaponManager.WeaponEntry weaponEntry, out WeaponOverride weaponOverride)
-        {
-            if (weaponEntry != null) return _weaponOverrides.TryGetValue(weaponEntry, out weaponOverride);
-            
-            weaponOverride = default;
-            return false;
-        }
-
-        public bool GetInstanceOverride(Weapon weapon, out WeaponOverride weaponOverride)
-        {
-            return _instanceOverrides.TryGetValue(weapon, out weaponOverride);
-        }
-
-        public static void ApplyOverrides(Weapon weapon)
-        {
-            //Apply global overrides first.
-            if (WeaponUtils.OverrideManager.GetWeaponOverride(weapon.weaponEntry, out var globalOverride))
-                ApplyOverride(weapon, globalOverride);
-            
-            //Apply instance overrides after.
-            if (WeaponUtils.OverrideManager.GetInstanceOverride(weapon, out var instanceOverride))
-                ApplyOverride(weapon, instanceOverride);
-        }
-
-        public static void ApplyOverride(Weapon weapon, WeaponOverride weaponOverride)
-        {
-            if (weaponOverride.maxAmmo.HasValue)
-            {
-                weapon.configuration.ammo = weaponOverride.maxAmmo.Value;
-                weapon.ammo = weapon.configuration.ammo;
-            }
-            if (weaponOverride.maxSpareAmmo.HasValue)
-            {
-                weapon.configuration.spareAmmo = weaponOverride.maxSpareAmmo.Value;
-                weapon.spareAmmo = weapon.configuration.spareAmmo;
-            }
-            
-            weapon.configuration.resupplyNumber = weaponOverride.resupplyNumber ?? weapon.configuration.resupplyNumber;
-            weapon.configuration.maxAmmoPerReload = weaponOverride.maxAmmoPerReload ?? weapon.configuration.maxAmmoPerReload;
-
-            if (weaponOverride.autoAdjustAllowedReloads)
-            {
-                List<int> allowedReloads = new List<int>();
-                for (var i = 0; i < weapon.configuration.ammo; i++)
-                {
-                    allowedReloads.Add(i+1);
-                }
-                weapon.configuration.allowedReloads = allowedReloads.ToArray();
-            }
-            
-            weapon.configuration.kickback = weaponOverride.kickback ?? weapon.configuration.kickback;
-            weapon.configuration.randomKick = weaponOverride.randomKick ?? weapon.configuration.randomKick;
-            weapon.configuration.snapMagnitude = weaponOverride.snapMagnitude ?? weapon.configuration.snapMagnitude;
-            weapon.configuration.snapDuration = weaponOverride.snapDuration ?? weapon.configuration.snapDuration;
-            weapon.configuration.snapFrequency = weaponOverride.snapFrequency ?? weapon.configuration.snapFrequency;
-            
-            weapon.configuration.spread = weaponOverride.spread ?? weapon.configuration.spread;
-            weapon.configuration.followupSpreadGain = weaponOverride.followupSpreadGain ?? weapon.configuration.followupSpreadGain;
-            weapon.configuration.followupMaxSpreadHip = weaponOverride.followupMaxSpreadHip ?? weapon.configuration.followupMaxSpreadHip;
-            weapon.configuration.followupMaxSpreadAim = weaponOverride.followupMaxSpreadAim ?? weapon.configuration.followupMaxSpreadAim;
-            weapon.configuration.followupSpreadStayTime = weaponOverride.followupSpreadStayTime ?? weapon.configuration.followupSpreadStayTime;
-            weapon.configuration.followupSpreadDissipateTime = weaponOverride.followupSpreadDissipateTime ?? weapon.configuration.followupSpreadDissipateTime;
-            weapon.configuration.spreadProneMultiplier = weaponOverride.spreadProneMultiplier ?? weapon.configuration.spreadProneMultiplier;
-            weapon.configuration.followupSpreadProneMultiplier = weaponOverride.followupSpreadProneMultiplier ?? weapon.configuration.followupSpreadProneMultiplier;
-            
-            weapon.configuration.cooldown = weaponOverride.cooldown ?? weapon.configuration.cooldown;
-        }
-
-        public void SetProjectileOverride(Projectile projectile, ProjectileOverride projectileOverride)
-        {
-            Plugin.Logger.LogInfo($"Set override for {projectile.name}");
-            _projectileOverrides[projectile] = projectileOverride;
-        }
-
-        public bool TryGetProjectileOverride(Projectile projectile, out ProjectileOverride projectileOverride)
-        {
-            if(projectile != null) return _projectileOverrides.TryGetValue(projectile, out projectileOverride);
-            
-            projectileOverride = default;
-            return false;
-        }
-
-        public void RemoveProjectileOverride(Projectile projectile)
-        {
-            _projectileOverrides.Remove(projectile);
-        }
-    }
     
     [HarmonyPatch(typeof(Actor), "SpawnWeapon")]
     public class PatchSpawnWeapon
@@ -352,6 +272,7 @@ namespace JellyLib.WeaponUtils
         static bool Prefix(GameManager __instance)
         {
             WeaponUtils.OverrideManager.Clear();
+            WeaponUtils.CustomDataManager.Clear();
             Plugin.Logger.LogInfo($"{nameof(WeaponUtils)}.{nameof(GameManager.ReturnToMenu)}.Prefix: Cleared weapon overrides.");
             return true;
         }
@@ -363,6 +284,7 @@ namespace JellyLib.WeaponUtils
         static bool Prefix(GameManager __instance)
         {
             WeaponUtils.OverrideManager.Clear();
+            WeaponUtils.CustomDataManager.Clear();
             Plugin.Logger.LogInfo($"{nameof(WeaponUtils)}.{nameof(GameManager.ReturnToMenu)}.Prefix: Cleared weapon overrides.");
             return true;
         }
@@ -374,6 +296,7 @@ namespace JellyLib.WeaponUtils
         static bool Prefix(GameManager __instance)
         {
             WeaponUtils.OverrideManager.Clear();
+            WeaponUtils.CustomDataManager.Clear();
             Plugin.Logger.LogInfo($"{nameof(WeaponUtils)}.{nameof(GameManager.RestartLevel)}.Prefix: Cleared weapon overrides.");
             return true;
         }
@@ -394,6 +317,7 @@ namespace JellyLib.WeaponUtils
         static void Prefix(Weapon __instance)
         {
             WeaponUtils.OverrideManager.RemoveWeaponInstanceOverride(__instance);
+            WeaponUtils.CustomDataManager.ClearWeaponData(__instance);
         }
     }
 
@@ -476,6 +400,8 @@ namespace JellyLib.WeaponUtils
     [HarmonyPatch(typeof(ExplodingProjectile), "Explode")]
     public class PatchProjectileExplode
     {
+        private static readonly AccessTools.FieldRef<ExplodingProjectile, AudioSource> GetAudioSource = AccessTools.FieldRefAccess<ExplodingProjectile, AudioSource>("audioSource");
+        
         static bool Prefix(ExplodingProjectile __instance, Vector3 position, Vector3 up, ref bool __result)
         {
             if (!WeaponUtils.OverrideManager.TryGetProjectileOverride(__instance, out var projectileOverride))
@@ -494,10 +420,11 @@ namespace JellyLib.WeaponUtils
                 infantryDamageMultiplier = __instance.explosionConfiguration.infantryDamageMultiplier,
                 damageRange = __instance.explosionConfiguration.damageRange,
                 damageFalloff = __instance.explosionConfiguration.damageFalloff,
-                balanceRange = __instance.explosionConfiguration.balanceDamage,
+                balanceRange = __instance.explosionConfiguration.balanceRange,
                 balanceFalloff = __instance.explosionConfiguration.balanceFalloff,
                 force = __instance.explosionConfiguration.force
             };
+            
             var flag = ActorManager.Explode(__instance.killCredit, __instance.sourceWeapon, position, overridenExplosionConfig, __instance.armorDamage, reduceFriendlyDamage);
             
             __instance.transform.rotation = Quaternion.LookRotation(up);
@@ -517,7 +444,7 @@ namespace JellyLib.WeaponUtils
             if (__instance.trailParticles != null)
                 __instance.trailParticles.Stop();
 
-            var audioSource = ReflectionUtils.GetPrivateField<AudioSource>(__instance, "audioSource");
+            var audioSource = GetAudioSource(__instance);
             
             if (audioSource != null)
             {
@@ -557,10 +484,12 @@ namespace JellyLib.WeaponUtils
                 infantryDamageMultiplier = __instance.explosionConfiguration.infantryDamageMultiplier,
                 damageRange = __instance.explosionConfiguration.damageRange,
                 damageFalloff = __instance.explosionConfiguration.damageFalloff,
-                balanceRange = __instance.explosionConfiguration.balanceDamage,
+                balanceRange = __instance.explosionConfiguration.balanceRange,
                 balanceFalloff = __instance.explosionConfiguration.balanceFalloff,
                 force = __instance.explosionConfiguration.force
             };
+            
+            Plugin.Logger.LogInfo("Explosion range: " + overridenExplosionConfig.damageRange);
             
             ActorManager.Explode(__instance.killCredit, __instance.sourceWeapon, __instance.transform.position, overridenExplosionConfig, __instance.armorDamage, false);
             __instance.transform.rotation = Quaternion.LookRotation(Vector3.up);

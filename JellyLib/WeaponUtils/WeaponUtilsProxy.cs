@@ -2,13 +2,13 @@
 using Lua;
 using Lua.Proxy;
 using MoonSharp.Interpreter;
+using JellyLib.Utilities;
 
 namespace JellyLib.WeaponUtils
 {
     [Proxy(typeof(WeaponUtils))]
     public class WeaponUtilsProxy : IProxy
     {
-
         public static bool IsThrowableWeapon(WeaponProxy weaponProxy)
         {
             if (weaponProxy._value == null)
@@ -78,20 +78,54 @@ namespace JellyLib.WeaponUtils
         {
             if (weaponProxy._value == null)
             {
-                throw new ScriptRuntimeException("No weapon entry provided!");
+                throw new ScriptRuntimeException("No weapon provided!");
             }
             
             WeaponUtils.OverrideManager.AddWeaponInstanceOverride(weaponProxy._value, weaponOverrideProxy._value);
+        }
+
+        public static void AddWeaponInstanceOverride(MountedWeaponProxy mountedWeaponProxy, WeaponOverrideProxy weaponOverrideProxy)
+        {
+            if (mountedWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+            
+            WeaponUtils.OverrideManager.AddWeaponInstanceOverride(mountedWeaponProxy._value, weaponOverrideProxy._value);
         }
 
         public static void RemoveWeaponInstanceOverride(WeaponProxy weaponProxy)
         {
             if (weaponProxy._value == null)
             {
-                throw new ScriptRuntimeException("No weapon entry provided!");
+                throw new ScriptRuntimeException("No weapon provided!");
             }
             
             WeaponUtils.OverrideManager.RemoveWeaponInstanceOverride(weaponProxy._value);
+        }
+        
+        public static void RemoveWeaponInstanceOverride(MountedWeaponProxy mountedWeaponProxy)
+        {
+            if (mountedWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+            
+            WeaponUtils.OverrideManager.RemoveWeaponInstanceOverride(mountedWeaponProxy._value);
+        }
+
+        public static WeaponOverrideProxy GetWeaponInstanceOverride(WeaponProxy weaponProxy)
+        {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+
+            if (!WeaponUtils.OverrideManager.GetInstanceOverride(weaponProxy._value, out var weaponOverride))
+                return null;
+            
+            var proxy = new WeaponOverrideProxy(weaponOverride);
+            return proxy;
         }
 
         public static WeaponManager.WeaponEntry GetWeaponEntry(string weaponEntryName, ulong modId)
@@ -99,6 +133,64 @@ namespace JellyLib.WeaponUtils
             var weaponEntry = WeaponUtils.GetWeaponEntry(weaponEntryName, modId);
             return weaponEntry;
             //return weaponEntry == null ? null : new WeaponEntryProxy(weaponEntry);
+        }
+
+        public static float GetWeaponDamage(WeaponProxy weaponProxy)
+        {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+            
+            return WeaponUtils.GetWeaponDamage(weaponProxy._value);
+        }
+
+        public static float GetWeaponDamage(MountedWeaponProxy mountedWeaponProxy)
+        {
+            if (mountedWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+            
+            return WeaponUtils.GetWeaponDamage(mountedWeaponProxy._value);
+        }
+
+        public static float GetWeaponExplosionDamage(WeaponProxy weaponProxy)
+        {
+            if (weaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+
+            return WeaponUtils.GetWeaponExplosionDamage(weaponProxy._value);
+        }
+        
+        public static float GetWeaponExplosionDamage(MountedWeaponProxy mountedWeaponProxy)
+        {
+            if (mountedWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+
+            return WeaponUtils.GetWeaponExplosionDamage(mountedWeaponProxy._value);
+        }
+
+        public static void SetWeaponCustomData(WeaponProxy weaponProxy, CustomDataProxy customDataProxy)
+        {
+            if (weaponProxy._value == null)
+                throw new ScriptRuntimeException("No weapon provided!");
+            if (customDataProxy._value == null)
+                throw new ScriptRuntimeException("No custom data provided!");
+            
+            WeaponUtils.CustomDataManager.AddWeaponCustomData(weaponProxy._value, customDataProxy._value);
+        }
+
+        public static CustomDataProxy GetWeaponCustomData(WeaponProxy weaponProxy)
+        {
+            if (weaponProxy._value == null)
+                throw new ScriptRuntimeException("No weapon provided!");
+
+            return WeaponUtils.CustomDataManager.TryGetWeaponCustomData(weaponProxy._value, out var data) ? new CustomDataProxy(data) : null;
         }
         
         [MoonSharpHidden]

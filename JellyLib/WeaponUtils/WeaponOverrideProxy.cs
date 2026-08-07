@@ -58,13 +58,13 @@ namespace JellyLib.WeaponUtils
             set => _value.autoAdjustAllowedReloads = value;
         }
 
-        public int? damage
+        public float? damage
         {
             get => _value.damage;
             set => _value.damage = value;
         }
 
-        public int? balanceDamage
+        public float? balanceDamage
         {
             get => _value.balanceDamage;
             set => _value.balanceDamage = value;
@@ -154,13 +154,13 @@ namespace JellyLib.WeaponUtils
             set => _value.cooldown = value;
         }
 
-        public int? explosionDamage
+        public float? explosionDamage
         {
             get => _value.explosionDamage;
             set => _value.explosionDamage = value;
         }
 
-        public int? explosionBalanceDamage
+        public float? explosionBalanceDamage
         {
             get => _value.explosionBalanceDamage;
             set => _value.explosionBalanceDamage = value;

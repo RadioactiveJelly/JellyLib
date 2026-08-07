@@ -9,10 +9,10 @@
         public int? resupplyNumber;
         
         //Damage
-        public int? damage;
-        public int? balanceDamage;
-        public int? explosionDamage;
-        public int? explosionBalanceDamage;
+        public float? damage;
+        public float? balanceDamage;
+        public float? explosionDamage;
+        public float? explosionBalanceDamage;
         
         //Recoil
         public float? kickback;

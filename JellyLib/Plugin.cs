@@ -54,6 +54,8 @@ public class Plugin : BaseUnityPlugin
             script.Globals["JellyLib"] = typeof(JellyLibProxy);
             script.Globals["Stopwatch"] = typeof(StopwatchProxy);
             script.Globals["SilentSpawnHandle"] = typeof(SilentSpawnTokenProxy);
+            script.Globals["IdHelper"] = typeof(IdHelperProxy);
+            script.Globals["CustomData"] = typeof(CustomDataProxy);
             return true;
         }
     }
@@ -93,6 +95,10 @@ public class Plugin : BaseUnityPlugin
             UserData.RegisterType(typeof(SilentSpawnTokenProxy), InteropAccessMode.Default, null);
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, SilentSpawnToken v) => DynValue.FromObject(s, SilentSpawnTokenProxy.New(v)));
             Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(SilentSpawnToken), (DynValue v) => v.ToObject<SilentSpawnTokenProxy>()._value);
+            UserData.RegisterType(typeof(IdHelperProxy), InteropAccessMode.Default, null);
+            UserData.RegisterType(typeof(CustomDataProxy), InteropAccessMode.Default, null);
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion((Script s, CustomData v) => DynValue.FromObject(s, CustomDataProxy.New(v)));
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(CustomData), (DynValue v) => v.ToObject<CustomDataProxy>()._value);
             return true;
         }
     }
@@ -117,6 +123,8 @@ public class Plugin : BaseUnityPlugin
             proxyTypesList.Add(typeof(JellyLibProxy));
             proxyTypesList.Add(typeof(StopwatchProxy));
             proxyTypesList.Add(typeof(SilentSpawnTokenProxy));
+            proxyTypesList.Add(typeof(IdHelperProxy));
+            proxyTypesList.Add(typeof(CustomDataProxy));
             __result = proxyTypesList.ToArray();
         }
     }

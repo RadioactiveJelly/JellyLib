@@ -57,7 +57,7 @@ namespace JellyLib.Extensions
             return actorDamageData == null ? null : ScriptEventProxy.New(actorDamageData.onAfterDamageApplied);
         }
 
-        public static void Heal(this ActorProxy actorProxy, float amount, Actor source = null, Weapon weapon = null, WeaponManager.WeaponEntry weaponEntry = null)
+        public static void Heal(this ActorProxy actorProxy, float amount, Actor source = null, Weapon weapon = null, WeaponManager.WeaponEntry weaponEntry = null, CustomData customData = null)
         {
             var actor = actorProxy._value;
             if (actor == null)
@@ -72,7 +72,8 @@ namespace JellyLib.Extensions
                 sourceActor = source,
                 amountHealed = amount,
                 sourceWeapon = weapon,
-                sourceWeaponEntry = weaponEntry
+                sourceWeaponEntry = weaponEntry,
+                customData = customData
             };
 
             //If no weapon entry was passed but a weapon was provided, set the weapon entry value automatically.
