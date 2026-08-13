@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HarmonyLib;
 using Lua;
 using MoonSharp.Interpreter;
@@ -361,6 +362,17 @@ namespace JellyLib.DamageSystem
                 return DamageRelationship.EnemyToPlayer;
             return sourceActorTeam == targetActorTeam ? DamageRelationship.EnemyToEnemy : DamageRelationship.EnemyToAlly;
         }
+
+        public float GetActorHeadshotMultiplierModifier(Actor actor)
+        {
+            if (actor == null)
+                return 0;
+            
+            if (_actorData.TryGetValue(actor.actorIndex, out var data))
+                return data.HeadshotDamageMultiplierModifier;
+            
+            return 0;
+        }
         
         /// <summary>
         /// A struct that holds a collection of damage modifiers
@@ -384,6 +396,8 @@ namespace JellyLib.DamageSystem
         public class ActorDamageData(bool immortalThisFrame)
         {
             public bool ImmortalThisFrame { get; set; } = immortalThisFrame;
+
+            public float HeadshotDamageMultiplierModifier { get; set; } = 0.0f;
 
             public IReadOnlyDictionary<DamageInfo.DamageSourceType, DamageData> IncomingDamageData =
                 new Dictionary<DamageInfo.DamageSourceType, DamageData>()
@@ -589,6 +603,50 @@ namespace JellyLib.DamageSystem
             var actorDamageData = new DamageSystem.ActorDamageData();
             DamageSystem.Instance.RegisterActor(actor);
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Hitbox), nameof(Hitbox.ProjectileHit))]
+    public class PatchHitboxProjectileHit
+    {
+        static bool Prefix(Hitbox __instance, Projectile p, Vector3 position, ref bool __result)
+        {
+            if (__instance == null) return true;
+            
+            //We only want to run the patch if it's a headshot.
+            if (__instance.name != "Bone.004") return true;
+            if (__instance.parent == null) return true;
+            if (__instance.parent is not Actor) return true;
+            
+            var multiplier = __instance.multiplier;
+            if (__instance.heightBasedMultiplier)
+                multiplier = Mathf.Lerp(__instance.minMultiplier, __instance.multiplier, Mathf.Clamp01(0.95f - __instance.transform.worldToLocalMatrix.MultiplyPoint(position).x));
+            
+            if (WeaponUtils.WeaponUtils.OverrideManager.TryGetProjectileOverride(p, out var projectileOverride) && projectileOverride.headshotMultiplierModifier.HasValue)
+                multiplier += projectileOverride.headshotMultiplierModifier.Value;
+
+            multiplier += DamageSystem.Instance.GetActorHeadshotMultiplierModifier(p.killCredit);
+            if (multiplier < 1) multiplier = 1;
+            try
+            {
+                __result = __instance.parent.Damage(new DamageInfo(DamageInfo.DamageSourceType.Projectile, p.killCredit, p.sourceWeapon)
+                {
+                    healthDamage = p.Damage() * multiplier,
+                    balanceDamage = p.BalanceDamage(),
+                    isPiercing = p.configuration.piercing,
+                    isCriticalHit = true,
+                    point = position,
+                    direction = p.transform.forward,
+                    impactForce = p.configuration.impactForce * p.transform.forward
+                });
+            }
+            catch (Exception ex)
+            {
+                Plugin.Logger.LogError(ex);
+                return __result;
+            }
+            
+            return false;
         }
     }
 }

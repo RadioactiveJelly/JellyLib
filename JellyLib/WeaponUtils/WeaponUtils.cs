@@ -338,7 +338,8 @@ namespace JellyLib.WeaponUtils
             var projectileOverride = new ProjectileOverride
             {
                 damage = instanceOverride.damage ?? globalOverride.damage,
-                balanceDamage = instanceOverride.balanceDamage ?? globalOverride.balanceDamage
+                balanceDamage = instanceOverride.balanceDamage ?? globalOverride.balanceDamage,
+                headshotMultiplierModifier = instanceOverride.headshotMultiplierModifier ?? globalOverride.headshotMultiplierModifier,
             };
 
             if (__result is ExplodingProjectile or GrenadeProjectile)
@@ -488,8 +489,6 @@ namespace JellyLib.WeaponUtils
                 balanceFalloff = __instance.explosionConfiguration.balanceFalloff,
                 force = __instance.explosionConfiguration.force
             };
-            
-            Plugin.Logger.LogInfo("Explosion range: " + overridenExplosionConfig.damageRange);
             
             ActorManager.Explode(__instance.killCredit, __instance.sourceWeapon, __instance.transform.position, overridenExplosionConfig, __instance.armorDamage, false);
             __instance.transform.rotation = Quaternion.LookRotation(Vector3.up);

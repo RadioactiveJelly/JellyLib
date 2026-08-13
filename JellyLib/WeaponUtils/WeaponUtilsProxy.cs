@@ -93,6 +93,16 @@ namespace JellyLib.WeaponUtils
             
             WeaponUtils.OverrideManager.AddWeaponInstanceOverride(mountedWeaponProxy._value, weaponOverrideProxy._value);
         }
+        
+        public static void AddWeaponInstanceOverride(MeleeWeaponProxy meleeWeaponProxy, WeaponOverrideProxy weaponOverrideProxy)
+        {
+            if (meleeWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+            
+            WeaponUtils.OverrideManager.AddWeaponInstanceOverride(meleeWeaponProxy._value, weaponOverrideProxy._value);
+        }
 
         public static void RemoveWeaponInstanceOverride(WeaponProxy weaponProxy)
         {
@@ -113,6 +123,16 @@ namespace JellyLib.WeaponUtils
             
             WeaponUtils.OverrideManager.RemoveWeaponInstanceOverride(mountedWeaponProxy._value);
         }
+        
+        public static void RemoveWeaponInstanceOverride(MeleeWeaponProxy meleeWeaponProxy)
+        {
+            if (meleeWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+            
+            WeaponUtils.OverrideManager.RemoveWeaponInstanceOverride(meleeWeaponProxy._value);
+        }
 
         public static WeaponOverrideProxy GetWeaponInstanceOverride(WeaponProxy weaponProxy)
         {
@@ -122,6 +142,34 @@ namespace JellyLib.WeaponUtils
             }
 
             if (!WeaponUtils.OverrideManager.GetInstanceOverride(weaponProxy._value, out var weaponOverride))
+                return null;
+            
+            var proxy = new WeaponOverrideProxy(weaponOverride);
+            return proxy;
+        }
+        
+        public static WeaponOverrideProxy GetWeaponInstanceOverride(MountedWeaponProxy mountedWeaponProxy)
+        {
+            if (mountedWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+
+            if (!WeaponUtils.OverrideManager.GetInstanceOverride(mountedWeaponProxy._value, out var weaponOverride))
+                return null;
+            
+            var proxy = new WeaponOverrideProxy(weaponOverride);
+            return proxy;
+        }
+        
+        public static WeaponOverrideProxy GetWeaponInstanceOverride(MeleeWeaponProxy meleeWeaponProxy)
+        {
+            if (meleeWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+
+            if (!WeaponUtils.OverrideManager.GetInstanceOverride(meleeWeaponProxy._value, out var weaponOverride))
                 return null;
             
             var proxy = new WeaponOverrideProxy(weaponOverride);
@@ -154,6 +202,16 @@ namespace JellyLib.WeaponUtils
             
             return WeaponUtils.GetWeaponDamage(mountedWeaponProxy._value);
         }
+        
+        public static float GetWeaponDamage(MeleeWeaponProxy meleeWeaponProxy)
+        {
+            if (meleeWeaponProxy._value == null)
+            {
+                throw new ScriptRuntimeException("No weapon provided!");
+            }
+            
+            return WeaponUtils.GetWeaponDamage(meleeWeaponProxy._value);
+        }
 
         public static float GetWeaponExplosionDamage(WeaponProxy weaponProxy)
         {
@@ -174,6 +232,12 @@ namespace JellyLib.WeaponUtils
 
             return WeaponUtils.GetWeaponExplosionDamage(mountedWeaponProxy._value);
         }
+        
+        public static float GetWeaponExplosionDamage(MeleeWeaponProxy meleeWeaponProxy)
+        {
+            //Melee weapons cannot deal explosive damage
+            return 0;
+        }
 
         public static void SetWeaponCustomData(WeaponProxy weaponProxy, CustomDataProxy customDataProxy)
         {
@@ -184,6 +248,26 @@ namespace JellyLib.WeaponUtils
             
             WeaponUtils.CustomDataManager.AddWeaponCustomData(weaponProxy._value, customDataProxy._value);
         }
+        
+        public static void SetWeaponCustomData(MountedWeaponProxy mountedWeaponProxy, CustomDataProxy customDataProxy)
+        {
+            if (mountedWeaponProxy._value == null)
+                throw new ScriptRuntimeException("No weapon provided!");
+            if (customDataProxy._value == null)
+                throw new ScriptRuntimeException("No custom data provided!");
+            
+            WeaponUtils.CustomDataManager.AddWeaponCustomData(mountedWeaponProxy._value, customDataProxy._value);
+        }
+
+        public static void SetWeaponCustomData(MeleeWeaponProxy meleeWeaponProxy, CustomDataProxy customDataProxy)
+        {
+            if (meleeWeaponProxy._value == null)
+                throw new ScriptRuntimeException("No weapon provided!");
+            if (customDataProxy._value == null)
+                throw new ScriptRuntimeException("No custom data provided!");
+
+            WeaponUtils.CustomDataManager.AddWeaponCustomData(meleeWeaponProxy._value, customDataProxy._value);
+        }
 
         public static CustomDataProxy GetWeaponCustomData(WeaponProxy weaponProxy)
         {
@@ -191,6 +275,22 @@ namespace JellyLib.WeaponUtils
                 throw new ScriptRuntimeException("No weapon provided!");
 
             return WeaponUtils.CustomDataManager.TryGetWeaponCustomData(weaponProxy._value, out var data) ? new CustomDataProxy(data) : null;
+        }
+        
+        public static CustomDataProxy GetWeaponCustomData(MountedWeaponProxy mountedWeaponProxy)
+        {
+            if (mountedWeaponProxy._value == null)
+                throw new ScriptRuntimeException("No weapon provided!");
+
+            return WeaponUtils.CustomDataManager.TryGetWeaponCustomData(mountedWeaponProxy._value, out var data) ? new CustomDataProxy(data) : null;
+        }
+        
+        public static CustomDataProxy GetWeaponCustomData(MeleeWeaponProxy meleeWeaponProxy)
+        {
+            if (meleeWeaponProxy._value == null)
+                throw new ScriptRuntimeException("No weapon provided!");
+
+            return WeaponUtils.CustomDataManager.TryGetWeaponCustomData(meleeWeaponProxy._value, out var data) ? new CustomDataProxy(data) : null;
         }
         
         [MoonSharpHidden]

@@ -165,6 +165,12 @@ namespace JellyLib.WeaponUtils
             get => _value.explosionBalanceDamage;
             set => _value.explosionBalanceDamage = value;
         }
+
+        public float? headshotMultiplierModifier
+        {
+            get => _value.headshotMultiplierModifier;
+            set => _value.headshotMultiplierModifier = value;
+        }
         
         [MoonSharpUserDataMetamethod("__call")]
         public static WeaponOverrideProxy Call(DynValue _)

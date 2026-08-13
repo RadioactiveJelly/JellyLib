@@ -13,6 +13,7 @@
         public float? balanceDamage;
         public float? explosionDamage;
         public float? explosionBalanceDamage;
+        public float? headshotMultiplierModifier;
         
         //Recoil
         public float? kickback;

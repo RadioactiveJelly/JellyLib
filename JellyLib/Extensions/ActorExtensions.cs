@@ -6,6 +6,7 @@ using JellyLib.EventExtensions;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Diagnostics;
+using HarmonyLib;
 using JellyLib.Utilities;
 using Lua.Wrapper;
 using Ravenfield.Trigger;
@@ -120,6 +121,35 @@ namespace JellyLib.Extensions
                 return;
 
             actorData.ImmortalThisFrame = true;
+        }
+
+        private static readonly AccessTools.FieldRef<Actor, Collider[]> GetAnimatedColliders = AccessTools.FieldRefAccess<Actor, Collider[]>("hitboxColliders");
+        private static readonly AccessTools.FieldRef<Actor, Collider[]> GetRagdollColliders = AccessTools.FieldRefAccess<Actor, Collider[]>("ragdollColliders");
+
+        public static void SetHeadshotMultiplier(this ActorProxy actorProxy, float multiplier)
+        {
+            var actor = actorProxy._value;
+            if (actor == null)
+                return;
+            
+            var hitboxColliders = GetAnimatedColliders(actor);
+            foreach (var collider in hitboxColliders)
+            {
+                var hitbox = collider.GetComponent<Hitbox>();
+                if (hitbox == null) continue;
+                if (hitbox.name != "Bone.004") continue;
+                
+                hitbox.multiplier = multiplier;
+            }
+            var ragdollColliders = GetRagdollColliders(actor);
+            foreach (var collider in ragdollColliders)
+            {
+                var hitbox = collider.GetComponent<Hitbox>();
+                if (hitbox == null) continue;
+                if (hitbox.name != "Bone.004") continue;
+                
+                hitbox.multiplier = multiplier;
+            }
         }
 
         public static SilentSpawnToken SilentSpawnAt(this ActorProxy actorProxy, Vector3 position)
